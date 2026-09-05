@@ -102,6 +102,16 @@ function parseArgs(argv) {
   return opts;
 }
 
+// Snap and flatpak browsers run in their own mount namespace: they get a private
+// /tmp, and the `home` interface deliberately excludes dotfile directories. So
+// xdg-open cheerfully hands them a path they cannot read -- the browser starts,
+// finds nothing, and sits on a spinner forever with no error printed anywhere.
+// Pure and platform-free so it stays testable; the caller gates it on linux.
+export function sandboxUnreadable(p) {
+  if (/^\/(?:var\/)?tmp(?:\/|$)/.test(p)) return true;
+  return p.split(path.sep).some((seg) => seg.startsWith('.') && seg !== '.' && seg !== '..');
+}
+
 function openBrowser(filePath) {
   const url = 'file://' + filePath;
   const plat = process.platform;
@@ -185,6 +195,11 @@ export function main(argv) {
 
   if (opts.open && process.stdout.isTTY) {
     console.error(DIM('  ● opening the story in your browser…'));
+    if (process.platform === 'linux' && sandboxUnreadable(htmlPath)) {
+      console.error(DIM('    note: snap/flatpak browsers cannot read this path and will hang on a'));
+      console.error(DIM('    blank tab. Re-run with --out somewhere under your home directory, or'));
+      console.error(DIM('    open the file above in an unconfined browser.'));
+    }
     openBrowser(htmlPath);
   }
 }

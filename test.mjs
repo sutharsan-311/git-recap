@@ -5,6 +5,7 @@ import { analyze } from './src/git.js';
 import { heatmapSvg, identiconSvg } from './src/report.js';
 import { THEMES } from './src/themes.js';
 import { buildCardSvg } from './src/card.js';
+import { sandboxUnreadable } from './src/cli.js';
 import fs from 'node:fs';
 
 // A repo with nothing remarkable: every rate sits at the TYPICAL baseline.
@@ -164,4 +165,17 @@ for (const [key, signal] of Object.entries(only)) {
   assert.match(style, /prefers-reduced-motion/, 'card motion must be opt-out');
   assert.doesNotMatch(svg, /(?:src|href)=|url\(#?['"]?http/, 'the card must stay self-contained');
 }
-console.log('ok — verdict scoring, heatmap window, language stats, identicons, animated card, deck determinism');
+
+// -------------------------------------------------------------- sandboxed browsers
+// A snap browser gets a private /tmp and no access to dotfile directories, so
+// xdg-open handed it a path it could not read: the browser cold-started, found
+// nothing, wedged, and then swallowed every later open with no error anywhere.
+{
+  for (const p of ['/tmp/x/wrapped.html', '/var/tmp/wrapped.html', '/tmp', '/home/u/.cache/w/wrapped.html', '/home/u/proj/.next/wrapped.html']) {
+    assert.equal(sandboxUnreadable(p), true, `${p} is not readable by a confined browser`);
+  }
+  for (const p of ['/home/u/proj/git-wrapped/wrapped.html', '/home/u/Desktop/w/wrapped.html', '/srv/code/wrapped.html', '/home/u/tmp/wrapped.html']) {
+    assert.equal(sandboxUnreadable(p), false, `${p} is fine and must not warn`);
+  }
+}
+console.log('ok — verdict scoring, heatmap window, language stats, identicons, animated card, sandboxed browsers, deck determinism');
