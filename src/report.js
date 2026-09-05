@@ -38,20 +38,25 @@ export function heatmapSvg(s, t) {
 
   const level = (v) => (v <= 0 ? 0 : v < max * 0.25 ? 1 : v < max * 0.5 ? 2 : v < max * 0.75 ? 3 : 4);
 
-  let rects = '';
-  let lastMonth = -1;
-  let lastLabelCol = -99;
-  let labels = '';
+  // Month labels: one per boundary column, minus any month too narrow to hold the
+  // text. Dropping the NARROW month matters: the old pass ran left to right and
+  // always kept column 0, so the partial month at the window's edge survived and
+  // the first full month was the one dropped ("Jul, Sep, Oct...").
+  const bounds = [];
   for (let c = 0; c < cols; c++) {
     const d0 = startUtc + c * 7;
-    const m0 = new Date(d0 * 86400000).getUTCMonth();
-    if (m0 !== lastMonth && d0 <= endUtc && c - lastLabelCol >= 3) {
-      labels += `<text x="${padL + c * step}" y="12" font-size="10" fill="${t.faint}" font-family="system-ui,sans-serif">${MONTHS[m0]}</text>`;
-      lastMonth = m0;
-      lastLabelCol = c;
-    } else if (m0 !== lastMonth) {
-      lastMonth = m0;
-    }
+    if (d0 > endUtc) break;
+    const m = new Date(d0 * 86400000).getUTCMonth();
+    if (!bounds.length || bounds[bounds.length - 1].m !== m) bounds.push({ c, m });
+  }
+  const labels = bounds
+    .filter((b, i) => !bounds[i + 1] || bounds[i + 1].c - b.c >= 2)
+    .map((b) => `<text x="${padL + b.c * step}" y="12" font-size="10" fill="${t.faint}" font-family="system-ui,sans-serif">${MONTHS[b.m]}</text>`)
+    .join('');
+
+  let rects = '';
+  for (let c = 0; c < cols; c++) {
+    const d0 = startUtc + c * 7;
     for (let r = 0; r < 7; r++) {
       const d = d0 + r;
       if (d > endUtc) break;

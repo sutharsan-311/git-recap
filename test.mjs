@@ -94,4 +94,20 @@ for (const [key, signal] of Object.entries(only)) {
   assert.doesNotMatch(src, /Math\.random\s*\(/, 'the deck must not use unseeded randomness');
 }
 
+
+// Regression: an over-tight collision guard silently dropped a month label when a
+// boundary landed <3 columns after the previous one, so a window starting mid-May
+// rendered "May, Jul, Aug…". A calendar missing a month reads as broken.
+{
+  const svg = heatmapSvg(
+    { dailyCounts: { '2026-05-20': 1 }, lastCommit: { date: '2026-05-20' } },
+    THEMES.night,
+  );
+  const M = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const seen = [...svg.matchAll(/y="12"[^>]*>([A-Z][a-z]{2})</g)].map((m) => M.indexOf(m[1]));
+  assert.ok(seen.length >= 12, `a 53-week window spans >=12 months, got ${seen.length}`);
+  for (let i = 1; i < seen.length; i++) {
+    assert.equal((seen[i - 1] + 1) % 12, seen[i], `month label skipped after ${M[seen[i - 1]]}`);
+  }
+}
 console.log('ok — verdict scoring, heatmap window, language stats, deck determinism');
