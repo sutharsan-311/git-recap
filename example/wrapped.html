@@ -78,6 +78,9 @@
   .bars { display: flex; flex-direction: column; gap: 16px; margin-top: 10px; }
   .bar-row { display: grid; grid-template-columns: minmax(120px, 240px) 1fr minmax(90px, auto); gap: 16px; align-items: center; text-align: left; }
   .bar-label { font-size: 14.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .who { display: flex; align-items: center; gap: 9px; overflow: visible; }
+  .who-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ident { flex: none; border-radius: 5px; border: 1px solid rgba(255,255,255,0.12); }
   .bar-track { height: 14px; border-radius: 999px; background: rgba(255,255,255,0.055); overflow: hidden; }
   .bar-fill { display: block; height: 100%; border-radius: 999px; }
   .bar-val { font-size: 13px; color: rgba(255,255,255,0.38); font-variant-numeric: tabular-nums; text-align: right; }
@@ -266,17 +269,17 @@
       <h2 class="rv" style="--d:.15s">It took a <span class="grad">village</span></h2>
       <div class="bars">
       <div class="bar-row rv" style="--d:0.25s">
-        <span class="bar-label">🥇 Alex Rivera</span>
+        <span class="bar-label who"><svg class="ident" viewBox="0 0 5 5" width="26" height="26" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><rect width="5" height="5" fill="rgba(255,255,255,0.055)"/><g fill="#8a7dff"><rect x="0" y="0" width="1" height="1"/><rect x="4" y="0" width="1" height="1"/><rect x="0" y="1" width="1" height="1"/><rect x="4" y="1" width="1" height="1"/><rect x="0" y="2" width="1" height="1"/><rect x="4" y="2" width="1" height="1"/><rect x="0" y="4" width="1" height="1"/><rect x="4" y="4" width="1" height="1"/><rect x="1" y="4" width="1" height="1"/><rect x="3" y="4" width="1" height="1"/><rect x="2" y="0" width="1" height="1"/><rect x="2" y="1" width="1" height="1"/><rect x="2" y="2" width="1" height="1"/><rect x="2" y="3" width="1" height="1"/></g></svg><span class="who-name">🥇 Alex Rivera</span></span>
         <span class="bar-track"><span class="bar-fill" style="width:100%;background:linear-gradient(90deg,#4dd8ff,#8a7dff)"></span></span>
         <span class="bar-val">517 commits</span>
       </div>
       <div class="bar-row rv" style="--d:0.37s">
-        <span class="bar-label">🥈 Sam Chen</span>
+        <span class="bar-label who"><svg class="ident" viewBox="0 0 5 5" width="26" height="26" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><rect width="5" height="5" fill="rgba(255,255,255,0.055)"/><g fill="#4dd8ff"><rect x="0" y="1" width="1" height="1"/><rect x="4" y="1" width="1" height="1"/><rect x="0" y="2" width="1" height="1"/><rect x="4" y="2" width="1" height="1"/><rect x="0" y="3" width="1" height="1"/><rect x="4" y="3" width="1" height="1"/><rect x="1" y="1" width="1" height="1"/><rect x="3" y="1" width="1" height="1"/><rect x="1" y="2" width="1" height="1"/><rect x="3" y="2" width="1" height="1"/><rect x="1" y="3" width="1" height="1"/><rect x="3" y="3" width="1" height="1"/><rect x="2" y="0" width="1" height="1"/><rect x="2" y="1" width="1" height="1"/></g></svg><span class="who-name">🥈 Sam Chen</span></span>
         <span class="bar-track"><span class="bar-fill" style="width:58.80077369439072%;background:linear-gradient(90deg,#4dd8ff,#8a7dff)"></span></span>
         <span class="bar-val">304 commits</span>
       </div>
       <div class="bar-row rv" style="--d:0.49s">
-        <span class="bar-label">🥉 Jules Kim</span>
+        <span class="bar-label who"><svg class="ident" viewBox="0 0 5 5" width="26" height="26" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><rect width="5" height="5" fill="rgba(255,255,255,0.055)"/><g fill="#5effa0"><rect x="0" y="1" width="1" height="1"/><rect x="4" y="1" width="1" height="1"/><rect x="0" y="2" width="1" height="1"/><rect x="4" y="2" width="1" height="1"/><rect x="0" y="3" width="1" height="1"/><rect x="4" y="3" width="1" height="1"/><rect x="1" y="1" width="1" height="1"/><rect x="3" y="1" width="1" height="1"/><rect x="1" y="2" width="1" height="1"/><rect x="3" y="2" width="1" height="1"/><rect x="2" y="2" width="1" height="1"/><rect x="2" y="3" width="1" height="1"/></g></svg><span class="who-name">🥉 Jules Kim</span></span>
         <span class="bar-track"><span class="bar-fill" style="width:28.820116054158607%;background:linear-gradient(90deg,#4dd8ff,#8a7dff)"></span></span>
         <span class="bar-val">149 commits</span>
       </div></div>

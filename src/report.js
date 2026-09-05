@@ -141,12 +141,57 @@ function donutSvg(s, t) {
 // seed instead: identical every time you open a given deck, still different
 // between repos. FNV-1a, 32-bit. test.mjs guards against unseeded randomness
 // creeping back into the deck.
-function confettiSeed(s) {
+function fnv1a(str) {
   let h = 2166136261;
-  for (const ch of `${s.repo}:${s.total}:${s.ins}:${s.longestStreak}`) {
-    h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
-  }
+  for (const ch of str) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
   return h >>> 0;
+}
+
+function confettiSeed(s) {
+  return fnv1a(`${s.repo}:${s.total}:${s.ins}:${s.longestStreak}`);
+}
+
+/* ---------- identicons ---------- */
+// Faces for the crew slide, drawn from the author's email. Deliberately NOT
+// fetched: a remote avatar would make the deck phone home every time someone
+// opens it, which breaks the "generated 100% locally" line on slide 1, and only
+// GitHub noreply addresses encode a resolvable user anyway.
+const IDENT_GRID = 5; // cells per side; odd so the mirrored halves share a centre column
+// Only the vivid head of the palette. The tail entries are muted greys meant for
+// the donut's long tail, and a crew drawn from those looks washed out next to the
+// rest of the deck. Six is still ample for the three authors this slide shows.
+const IDENT_INKS = 6;
+
+export function identiconSvg(seed, t, used, px = 26) {
+  const h = fnv1a(seed.toLowerCase());
+  // Colour comes from the hash so a person looks the same across decks, but three
+  // picks from an eight-colour palette collide about a third of the time (birthday
+  // problem) and the crew reads as one blue blur. Step to the next free colour.
+  const inks = t.palette.slice(0, IDENT_INKS);
+  let ci = h % inks.length;
+  if (used) {
+    for (let n = 0; n < inks.length && used.has(ci); n++) ci = (ci + 1) % inks.length;
+    used.add(ci);
+  }
+  const fill = inks[ci];
+  // xorshift32 rather than raw hash bits: FNV's low bits are correlated, which
+  // shows up as visible banding down the grid.
+  let b = h || 1;
+  const bit = () => {
+    b ^= b << 13; b ^= b >>> 17; b ^= b << 5;
+    return (b >>> 0) & 1;
+  };
+  const half = Math.ceil(IDENT_GRID / 2);
+  let cells = '';
+  for (let x = 0; x < half; x++) {
+    for (let y = 0; y < IDENT_GRID; y++) {
+      if (!bit()) continue;
+      cells += `<rect x="${x}" y="${y}" width="1" height="1"/>`;
+      const mx = IDENT_GRID - 1 - x;
+      if (mx !== x) cells += `<rect x="${mx}" y="${y}" width="1" height="1"/>`;
+    }
+  }
+  return `<svg class="ident" viewBox="0 0 ${IDENT_GRID} ${IDENT_GRID}" width="${px}" height="${px}" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><rect width="${IDENT_GRID}" height="${IDENT_GRID}" fill="${t.card}"/><g fill="${fill}">${cells}</g></svg>`;
 }
 
 /* ---------- slides ---------- */
@@ -276,9 +321,10 @@ function buildSlides(s, t, meta) {
     const top = s.authors.slice(0, 3);
     const maxA = top[0].commits || 1;
     const medals = ['🥇', '🥈', '🥉'];
+    const usedInk = new Set();
     const rows = top.map((a, i) => `
       <div class="bar-row rv" style="--d:${0.25 + i * 0.12}s">
-        <span class="bar-label">${medals[i]} ${esc(a.name)}</span>
+        <span class="bar-label who">${identiconSvg(a.email || a.name, t, usedInk)}<span class="who-name">${medals[i]} ${esc(a.name)}</span></span>
         <span class="bar-track"><span class="bar-fill" style="width:${Math.max(10, (a.commits / maxA) * 100)}%;background:linear-gradient(90deg,${t.b2},${t.b1})"></span></span>
         <span class="bar-val">${fmt(a.commits)} commits</span>
       </div>`).join('');
@@ -396,6 +442,9 @@ function css(t) {
   .bars { display: flex; flex-direction: column; gap: 16px; margin-top: 10px; }
   .bar-row { display: grid; grid-template-columns: minmax(120px, 240px) 1fr minmax(90px, auto); gap: 16px; align-items: center; text-align: left; }
   .bar-label { font-size: 14.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .who { display: flex; align-items: center; gap: 9px; overflow: visible; }
+  .who-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ident { flex: none; border-radius: 5px; border: 1px solid ${t.border}; }
   .bar-track { height: 14px; border-radius: 999px; background: ${t.card}; overflow: hidden; }
   .bar-fill { display: block; height: 100%; border-radius: 999px; }
   .bar-val { font-size: 13px; color: ${t.faint}; font-variant-numeric: tabular-nums; text-align: right; }

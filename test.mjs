@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { pickVerdict } from './src/verdict.js';
 import { analyze } from './src/git.js';
-import { heatmapSvg } from './src/report.js';
+import { heatmapSvg, identiconSvg } from './src/report.js';
 import { THEMES } from './src/themes.js';
 import fs from 'node:fs';
 
@@ -110,4 +110,38 @@ for (const [key, signal] of Object.entries(only)) {
     assert.equal((seen[i - 1] + 1) % 12, seen[i], `month label skipped after ${M[seen[i - 1]]}`);
   }
 }
-console.log('ok — verdict scoring, heatmap window, language stats, deck determinism');
+
+// -------------------------------------------------------------------- identicons
+// Crew avatars are drawn locally from the email. Deliberately not fetched: a
+// remote avatar would make every deck phone home on open, contradicting the
+// "generated 100% locally" line the cover slide prints.
+{
+  const ink = (svg) => svg.match(/<g fill="([^"]+)"/)[1];
+
+  // Same person, same face — across decks, and regardless of how it's typed.
+  assert.equal(
+    identiconSvg('dev@demo.io', THEMES.night),
+    identiconSvg('DEV@Demo.IO', THEMES.night),
+    'identicons must be stable per author',
+  );
+  assert.notEqual(
+    identiconSvg('a@x.com', THEMES.night),
+    identiconSvg('b@x.com', THEMES.night),
+    'different authors must not share a face',
+  );
+
+  // Regression: colour came straight off the hash, so 3 authors drawn from an
+  // 8-colour palette collided ~30% of the time and the crew read as one blur.
+  const used = new Set();
+  const inks = ['sutharsanmail311@gmail.com', '159125892+gpt-engineer-app[bot]@users.noreply.github.com', '144416509+sutharsan-311@users.noreply.github.com']
+    .map((e) => ink(identiconSvg(e, THEMES.night, used)));
+  assert.equal(new Set(inks).size, inks.length, `crew colours must be distinct, got ${inks}`);
+
+  // Nothing fetched. (Not a bare /https?:/ check — the SVG namespace is a URL.)
+  assert.doesNotMatch(
+    identiconSvg('a@x.com', THEMES.night),
+    /(?:src|href)=|url\(/,
+    'identicons must not fetch anything',
+  );
+}
+console.log('ok — verdict scoring, heatmap window, language stats, identicons, deck determinism');
