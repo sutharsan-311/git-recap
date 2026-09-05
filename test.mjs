@@ -4,6 +4,7 @@ import { pickVerdict } from './src/verdict.js';
 import { analyze } from './src/git.js';
 import { heatmapSvg, identiconSvg } from './src/report.js';
 import { THEMES } from './src/themes.js';
+import { buildCardSvg } from './src/card.js';
 import fs from 'node:fs';
 
 // A repo with nothing remarkable: every rate sits at the TYPICAL baseline.
@@ -144,4 +145,23 @@ for (const [key, signal] of Object.entries(only)) {
     'identicons must not fetch anything',
   );
 }
-console.log('ok — verdict scoring, heatmap window, language stats, identicons, deck determinism');
+
+// ------------------------------------------------------------------ animated card
+// The card is 1200x630 -- Open Graph size -- so preview scrapers, thumbnailers and
+// headless screenshots all sample it as a still. An <img>-loaded SVG sampled at
+// t=0 renders the FIRST keyframe, so a `from`/`0%` step that hides anything hands
+// every one of them a blank card. Verified in Chrome: a `from { fill: blue }` rule
+// rendered blue, not the element's own red. Mid-cycle steps only.
+{
+  const stats = {
+    total: 970, longestStreak: 13, ghostCommits: 308,
+    langs: [{ name: 'TypeScript', share: 0.48 }],
+    verdict: { emoji: '🦉', title: 'The Midnight Architect', blurb: 'up late.' },
+  };
+  const svg = buildCardSvg(stats, THEMES.night, { repo: 'demo', range: '2024 - 2026' });
+  const style = svg.match(/<style>([\s\S]*?)<\/style>/)[1];
+  assert.doesNotMatch(style, /(?:^|[\s{])(?:from|0%)\s*\{/, 'card keyframes must not define a t=0 state');
+  assert.match(style, /prefers-reduced-motion/, 'card motion must be opt-out');
+  assert.doesNotMatch(svg, /(?:src|href)=|url\(#?['"]?http/, 'the card must stay self-contained');
+}
+console.log('ok — verdict scoring, heatmap window, language stats, identicons, animated card, deck determinism');

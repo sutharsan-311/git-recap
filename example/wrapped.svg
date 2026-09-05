@@ -1,5 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="git-wrapped card for demo-repo">
   <defs>
+    <style>
+      /* mid-cycle keyframes only -- see ANIM above */
+      @keyframes gw-drift  { 50% { transform: translate(28px, -20px) scale(1.07); } }
+      @keyframes gw-drift2 { 50% { transform: translate(-32px, 16px) scale(1.06); } }
+      @keyframes gw-pulse  { 50% { opacity: .62; } }
+      @keyframes gw-hue    { 50% { stop-color: #8a7dff; } }
+      .blob  { transform-box: fill-box; transform-origin: center; }
+      .blob1 { animation: gw-drift 19s ease-in-out infinite; }
+      .blob2 { animation: gw-drift2 24s ease-in-out infinite; }
+      .pulse { animation: gw-pulse 7s ease-in-out infinite; }
+      .hue   { animation: gw-hue 14s ease-in-out infinite; }
+      @media (prefers-reduced-motion: reduce) {
+        .blob1, .blob2, .pulse, .hue { animation: none; }
+      }
+    </style>
     <radialGradient id="blob1" cx="50%" cy="50%" r="50%">
       <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.55"/>
       <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
@@ -9,7 +24,7 @@
       <stop offset="100%" stop-color="#2563eb" stop-opacity="0"/>
     </radialGradient>
     <linearGradient id="titleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ff6ec4"/>
+      <stop class="hue" offset="0%" stop-color="#ff6ec4"/>
       <stop offset="100%" stop-color="#ffc36e"/>
     </linearGradient>
     <linearGradient id="verdictGrad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -19,8 +34,8 @@
   </defs>
 
   <rect width="1200" height="630" fill="#0a0a16"/>
-  <circle cx="130" cy="40" r="330" fill="url(#blob1)"/>
-  <circle cx="1120" cy="620" r="380" fill="url(#blob2)"/>
+  <circle class="blob blob1" cx="130" cy="40" r="330" fill="url(#blob1)"/>
+  <circle class="blob blob2" cx="1120" cy="620" r="380" fill="url(#blob2)"/>
 
   <text x="64" y="76" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="22" font-weight="800" fill="#ffffff">git<tspan fill="url(#titleGrad)">-wrapped</tspan></text>
   <text x="1136" y="76" text-anchor="end" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="15" font-weight="600" fill="rgba(255,255,255,0.38)">2024 – 2026</text>
@@ -31,25 +46,25 @@
   <g>
     <rect x="72" y="188" width="246" height="128" rx="18" fill="rgba(255,255,255,0.055)" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
     <text x="92" y="222" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="12" letter-spacing="2.5" font-weight="700" fill="rgba(255,255,255,0.38)">COMMITS</text>
-    <text x="92" y="278" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="40" font-weight="800" fill="#ff6ec4">970</text>
+    <text class="pulse" style="animation-delay:0.00s" x="92" y="278" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="40" font-weight="800" fill="#ff6ec4">970</text>
     
   </g>
   <g>
     <rect x="342" y="188" width="246" height="128" rx="18" fill="rgba(255,255,255,0.055)" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
     <text x="362" y="222" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="12" letter-spacing="2.5" font-weight="700" fill="rgba(255,255,255,0.38)">TOP LANGUAGE</text>
-    <text x="362" y="278" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="30" font-weight="800" fill="#8a7dff">TypeScript</text>
+    <text class="pulse" style="animation-delay:0.55s" x="362" y="278" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="30" font-weight="800" fill="#8a7dff">TypeScript</text>
     <text x="362" y="302" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="13" fill="rgba(255,255,255,0.38)">48% of code written</text>
   </g>
   <g>
     <rect x="612" y="188" width="246" height="128" rx="18" fill="rgba(255,255,255,0.055)" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
     <text x="632" y="222" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="12" letter-spacing="2.5" font-weight="700" fill="rgba(255,255,255,0.38)">LONGEST STREAK</text>
-    <text x="632" y="278" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="40" font-weight="800" fill="#ffc36e">13d</text>
+    <text class="pulse" style="animation-delay:1.10s" x="632" y="278" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="40" font-weight="800" fill="#ffc36e">13d</text>
     
   </g>
   <g>
     <rect x="882" y="188" width="246" height="128" rx="18" fill="rgba(255,255,255,0.055)" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
     <text x="902" y="222" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="12" letter-spacing="2.5" font-weight="700" fill="rgba(255,255,255,0.38)">3AM COMMITS</text>
-    <text x="902" y="278" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="40" font-weight="800" fill="#4dd8ff">308</text>
+    <text class="pulse" style="animation-delay:1.65s" x="902" y="278" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="40" font-weight="800" fill="#4dd8ff">308</text>
     
   </g>
 
