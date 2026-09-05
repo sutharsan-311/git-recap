@@ -37,6 +37,7 @@
   },
   "homepage": "https://github.com/sutharsan-311/git-wrapped#readme",
   "scripts": {
-    "test": "node test.mjs"
+    "test": "node test.mjs",
+    "screenshots": "node scripts/make-screenshots.mjs"
   }
 }
