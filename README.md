@@ -21,9 +21,11 @@ No account. No API key. No upload. Zero dependencies.
 > 🎬 *Demo video goes here — record 15 seconds, drag it into a GitHub issue, paste the
 > `user-attachments` URL it gives you on this line. See [docs/LAUNCH.md](docs/LAUNCH.md).*
 
-| The story (11 animated slides) | The verdict 👏 |
+| The story (11 animated slides) | Every day you showed up |
 | --- | --- |
-| ![story](docs/screenshots/story-cover.png) | ![verdict](docs/screenshots/story-verdict.png) |
+| ![story](docs/screenshots/story-cover.png) | ![heatmap](docs/screenshots/story-heatmap.png) |
+| **Who did the work** | **The verdict** 👏 |
+| ![crew](docs/screenshots/story-crew.png) | ![verdict](docs/screenshots/story-verdict.png) |
 
 **And the share card** — generated as `wrapped.svg`, made to be embedded in your README:
 

@@ -19,6 +19,7 @@ const SHOTS = {
   'story-cover': 'Cover',
   'story-heatmap': 'Heatmap',
   'story-verdict': 'Verdict',
+  'story-crew': 'The crew',
 };
 
 const WIDTH = 1440;
