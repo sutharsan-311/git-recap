@@ -24,11 +24,17 @@ const SHOTS = {
 const WIDTH = 1440;
 const HEIGHT = 900;
 
-// The verdict confetti spawns above the viewport and self-clears 4200ms after the
-// slide opens, so this picks a moment inside that window. Raising it drops the
-// particles further down the frame; past ~7500 they have fallen out of shot.
-// ponytail: eyeballed, not derived. Re-tune by eye if the deck's timing changes.
-const BUDGET_MS = 6000;
+// Frames to advance before capturing. The deck's confetti seeds deterministically
+// but still MOVES, so the capture has to land on a chosen frame rather than
+// wherever Chrome's virtual time happened to stop. 140 frames (~2.3s) drops the
+// particles into the middle of the shot, comfortably inside the 4200ms at which
+// the burst clears itself.
+// ponytail: chosen by eye. Re-tune if the deck's confetti timing changes.
+const FRAMES = 185;
+const FRAME_MS = 1000 / 60;
+
+// Only needs to cover load + decode now that frames are driven by hand.
+const BUDGET_MS = 3000;
 
 // Chrome's --virtual-time-budget fast-forwards timers and rAF but NOT CSS
 // transitions or animations. The deck fades slides with a transition and reveals
@@ -36,22 +42,43 @@ const BUDGET_MS = 6000;
 // blank or shows two slides stacked. Pin both to the end state they'd reach on
 // screen, and hide inactive slides outright — visibility on the parent beats the
 // forced opacity on its children.
+//
+// The blanket transition kill matters beyond the slides: the progress bar and the
+// slide counter/dots animate too, and they were the last source of run-to-run
+// pixel drift (differences showed up only in the top and bottom 50px).
 const FREEZE = `<style>
-.slide { transition: none !important; opacity: 0 !important; visibility: hidden !important; }
+* { transition: none !important; }
+.slide { opacity: 0 !important; visibility: hidden !important; }
 .slide.active { opacity: 1 !important; transform: none !important; visibility: visible !important; }
 .rv { opacity: 1 !important; transform: none !important; animation: none !important; }
 </style>`;
 
 // Slides aren't deep-linkable — the index lives in a closure — so walk to the
-// target with the deck's own keyboard handler, then settle the count-up numbers
-// so they don't get captured mid-tick showing "0".
+// target with the deck's own keyboard handler.
+//
+// Then run the animations on a fake clock. Chrome's virtual time advances rAF at
+// its own pace, so two runs of the same deck stop on different frames and produce
+// different pixels. Queueing the callbacks and stepping them by hand makes the
+// captured frame an input instead of a race.
 const drive = (steps) => `<script>
-addEventListener('load', () => {
-  for (let i = 0; i < ${steps}; i++) dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
-  document.querySelectorAll('[data-cu]').forEach((el) => {
-    el.textContent = Number(el.dataset.cu).toLocaleString('en-US');
+(() => {
+  let t = 0;
+  const queue = [];
+  requestAnimationFrame = (cb) => queue.push(cb);
+  performance.now = () => t;
+  addEventListener('load', () => {
+    for (let i = 0; i < ${steps}; i++) dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
+    for (let f = 0; f < ${FRAMES}; f++) {
+      t += ${FRAME_MS};
+      for (const cb of queue.splice(0)) cb(t);
+    }
+    // Belt and braces: the count-ups settle within 60 frames, but pin them anyway
+    // so FRAMES stays free to be tuned for the confetti alone.
+    document.querySelectorAll('[data-cu]').forEach((el) => {
+      el.textContent = Number(el.dataset.cu).toLocaleString('en-US');
+    });
   });
-});
+})();
 </script>`;
 
 function runnable(bin) {

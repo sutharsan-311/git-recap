@@ -4,6 +4,7 @@ import { pickVerdict } from './src/verdict.js';
 import { analyze } from './src/git.js';
 import { heatmapSvg } from './src/report.js';
 import { THEMES } from './src/themes.js';
+import fs from 'node:fs';
 
 // A repo with nothing remarkable: every rate sits at the TYPICAL baseline.
 const ordinary = (over = {}) => ({
@@ -83,4 +84,12 @@ for (const [key, signal] of Object.entries(only)) {
   assert.equal(st.langs[0].name, 'TypeScript');
 }
 
-console.log('ok — verdict scoring, heatmap window, language stats');
+// ------------------------------------------------------------ deck determinism
+// The confetti is seeded off the repo's stats so a regenerated screenshot diffs
+// cleanly. A stray Math.random() anywhere in the deck silently undoes that.
+{
+  const src = fs.readFileSync('./src/report.js', 'utf8');
+  assert.doesNotMatch(src, /Math\.random\s*\(/, 'the deck must not use unseeded randomness');
+}
+
+console.log('ok — verdict scoring, heatmap window, language stats, deck determinism');

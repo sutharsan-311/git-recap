@@ -131,6 +131,19 @@ function donutSvg(s, t) {
   </div>`;
 }
 
+// The confetti was unseeded, so the verdict slide rendered differently every time
+// and regenerated screenshots always produced a dirty diff. It draws from this
+// seed instead: identical every time you open a given deck, still different
+// between repos. FNV-1a, 32-bit. test.mjs guards against unseeded randomness
+// creeping back into the deck.
+function confettiSeed(s) {
+  let h = 2166136261;
+  for (const ch of `${s.repo}:${s.total}:${s.ins}:${s.longestStreak}`) {
+    h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
+  }
+  return h >>> 0;
+}
+
 /* ---------- slides ---------- */
 
 function slide(inner, { title } = {}) {
@@ -405,7 +418,7 @@ function css(t) {
   }`;
 }
 
-function pageJs(t, cardSvg) {
+function pageJs(t, cardSvg, seed) {
   return `
   (() => {
     const slides = [...document.querySelectorAll('.slide')];
@@ -464,14 +477,23 @@ function pageJs(t, cardSvg) {
     const canvas = document.querySelector('#confetti');
     const ctx = canvas.getContext('2d');
     const COLORS = ${JSON.stringify([t.a1, t.a2, t.b1, t.b2])};
+    /* mulberry32, reseeded per burst so a replay looks the same as the first run */
+    let cs = 0;
+    const crnd = () => {
+      cs |= 0; cs = (cs + 0x6d2b79f5) | 0;
+      let t = Math.imul(cs ^ (cs >>> 15), 1 | cs);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
     function burst() {
+      cs = ${seed};
       canvas.width = innerWidth; canvas.height = innerHeight;
       const parts = [];
       for (let i = 0; i < 140; i++) parts.push({
-        x: Math.random() * canvas.width, y: -20 - Math.random() * canvas.height * 0.4,
-        w: 6 + Math.random() * 7, h: 9 + Math.random() * 9,
-        vy: 2.4 + Math.random() * 3.4, vx: -1.4 + Math.random() * 2.8,
-        rot: Math.random() * Math.PI, vr: -0.12 + Math.random() * 0.24,
+        x: crnd() * canvas.width, y: -20 - crnd() * canvas.height * 0.4,
+        w: 6 + crnd() * 7, h: 9 + crnd() * 9,
+        vy: 2.4 + crnd() * 3.4, vx: -1.4 + crnd() * 2.8,
+        rot: crnd() * Math.PI, vr: -0.12 + crnd() * 0.24,
         c: COLORS[i % COLORS.length],
       });
       const t0 = performance.now();
@@ -547,7 +569,7 @@ export function buildHtml(s, theme, meta) {
       <button class="navbtn" id="nxt" aria-label="next">→</button>
     </div>
   </footer>
-<script>${pageJs(theme, cardSvg)}</script>
+<script>${pageJs(theme, cardSvg, confettiSeed(s))}</script>
 </body>
 </html>
 `;
