@@ -82,6 +82,8 @@ for (const [key, signal] of Object.entries(only)) {
   ]);
   assert.equal(st.langs.length, 1, 'generated files must not appear as languages');
   assert.equal(st.langs[0].name, 'TypeScript');
+  assert.equal(st.ins, 10, 'generated files must not inflate the line count');
+  assert.deepEqual(st.files.map((f) => f.path), ['src/app.ts'], 'generated files must not top the file list');
 }
 
 // ------------------------------------------------------------ deck determinism

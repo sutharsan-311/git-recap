@@ -157,6 +157,7 @@ export function analyze(commits, { merges = 0 } = {}) {
     if (/^\.+$/.test(subj)) lingo.dot++;
 
     for (const f of c.files) {
+      if (isGenerated(f.path)) continue; // lockfiles/vendored: not lines you wrote
       const entry = files.get(f.path) || { path: f.path, commits: 0, ins: 0, del: 0 };
       entry.commits++;
       entry.ins += f.ins;
@@ -165,7 +166,7 @@ export function analyze(commits, { merges = 0 } = {}) {
       if (!f.binary) {
         ins += f.ins;
         del += f.del;
-        const lang = isGenerated(f.path) ? null : langOf(f.path);
+        const lang = langOf(f.path);
         if (lang) {
           const l = langs.get(lang.name) || { name: lang.name, color: lang.color, ins: 0, del: 0, files: new Set() };
           l.ins += f.ins;
