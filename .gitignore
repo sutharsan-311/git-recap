@@ -1,0 +1,9 @@
+# Dependencies are intentionally zero. Do not add any.
+node_modules/
+demo-repo/
+*/git-wrapped/
+*.log
+.DS_Store
+
+# Machine-local Claude Code settings
+.claude/settings.local.json

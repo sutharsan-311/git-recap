@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>demo-repo — git-wrapped</title>
+<meta name="description" content="Spotify Wrapped for your git history. Generated locally by git-wrapped.">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    background: radial-gradient(1100px 700px at 15% -10%, #1a1040, #0a0a16 60%) fixed, #0a0a16;
+    color: #ffffff;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; }
+  .grad {
+    background: linear-gradient(100deg, #ff6ec4 10%, #ffc36e 90%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  /* chrome */
+  .topbar { position: fixed; inset: 0 0 auto 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; padding: 18px 26px; }
+  .wordmark { font-weight: 800; font-size: 17px; letter-spacing: -0.02em; }
+  .actions { display: flex; gap: 10px; }
+  .btn {
+    border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.055); color: #ffffff;
+    padding: 9px 16px; border-radius: 999px; font-size: 13.5px; font-weight: 600; cursor: pointer;
+    backdrop-filter: blur(8px); transition: transform .15s ease, border-color .15s ease;
+  }
+  .btn:hover { transform: translateY(-1px); border-color: #ff6ec4; }
+  .progress { position: fixed; top: 0; left: 0; height: 4px; width: 0%; z-index: 40;
+    background: linear-gradient(90deg, #ff6ec4, #ffc36e, #4dd8ff); transition: width .45s cubic-bezier(.3,.7,.2,1); }
+  .bottombar { position: fixed; inset: auto 0 0 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; padding: 18px 26px; }
+  .dots { display: flex; gap: 7px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.12); cursor: pointer; transition: all .25s ease; }
+  .dot.on { background: #ff6ec4; transform: scale(1.35); }
+  .counter { font-size: 13px; color: rgba(255,255,255,0.38); font-variant-numeric: tabular-nums; }
+  .navbtns { display: flex; gap: 8px; }
+  .navbtn { width: 42px; height: 42px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.055); color: #ffffff; font-size: 17px; cursor: pointer; transition: transform .15s ease; }
+  .navbtn:hover { transform: scale(1.08); }
+  /* slides */
+  .stage { position: fixed; inset: 0; }
+  .slide {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    opacity: 0; transform: translateY(30px) scale(.985); pointer-events: none;
+    transition: opacity .55s ease, transform .55s cubic-bezier(.2,.7,.2,1);
+  }
+  .slide.active { opacity: 1; transform: none; pointer-events: auto; }
+  .inner { width: min(920px, 92vw); max-height: 82vh; overflow: hidden auto; text-align: center; padding: 70px 0 40px; scrollbar-width: none; }
+  .inner::-webkit-scrollbar { display: none; }
+  .kicker { font-size: 12.5px; font-weight: 700; letter-spacing: .32em; color: rgba(255,255,255,0.38); margin-bottom: 26px; }
+  h1 { font-size: clamp(46px, 9vw, 104px); line-height: 1.02; letter-spacing: -0.03em; font-weight: 800; word-break: break-word; }
+  h2 { font-size: clamp(32px, 5.4vw, 58px); line-height: 1.08; letter-spacing: -0.02em; font-weight: 800; margin-bottom: 30px; }
+  .headline-sm { font-size: clamp(20px, 3vw, 30px); font-weight: 700; margin-top: 6px; }
+  .sub { color: rgba(255,255,255,0.62); font-size: clamp(15px, 2vw, 19px); line-height: 1.65; margin-top: 22px; }
+  .hintline { color: rgba(255,255,255,0.38); font-size: 14px; margin-top: 14px; }
+  .quote { color: rgba(255,255,255,0.62); font-size: 16px; line-height: 1.7; margin-top: 34px; font-style: italic; }
+  .quote b { color: #ffffff; font-style: normal; }
+  .stat-big { font-size: clamp(90px, 20vw, 210px); font-weight: 800; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .cards { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 34px; }
+  .mini { background: rgba(255,255,255,0.055); border: 1px solid rgba(255,255,255,0.12); border-radius: 18px; padding: 16px 26px; min-width: 150px; }
+  .mini b { display: block; font-size: 30px; font-weight: 800; letter-spacing: -0.02em; }
+  .mini span { color: rgba(255,255,255,0.38); font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; font-weight: 600; }
+  .chart { display: flex; justify-content: center; margin-top: 6px; }
+  .clock-flex { display: flex; gap: 44px; align-items: center; justify-content: center; flex-wrap: wrap; }
+  .clock-side { text-align: left; display: flex; flex-direction: column; gap: 18px; max-width: 300px; }
+  .fact { background: rgba(255,255,255,0.055); border: 1px solid rgba(255,255,255,0.12); border-radius: 18px; padding: 16px 22px; }
+  .fact b { display: block; font-size: 26px; font-weight: 800; }
+  .fact span { color: rgba(255,255,255,0.38); font-size: 13.5px; }
+  .donut-wrap { display: flex; gap: 40px; align-items: center; justify-content: center; flex-wrap: wrap; }
+  .legend { display: flex; flex-direction: column; gap: 13px; text-align: left; min-width: 220px; }
+  .lg-row { display: flex; align-items: center; gap: 12px; font-size: 17px; font-weight: 600; }
+  .lg-dot { width: 13px; height: 13px; border-radius: 4px; }
+  .lg-name { flex: 1; }
+  .lg-pct { color: rgba(255,255,255,0.38); font-variant-numeric: tabular-nums; }
+  .bars { display: flex; flex-direction: column; gap: 16px; margin-top: 10px; }
+  .bar-row { display: grid; grid-template-columns: minmax(120px, 240px) 1fr minmax(90px, auto); gap: 16px; align-items: center; text-align: left; }
+  .bar-label { font-size: 14.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar-track { height: 14px; border-radius: 999px; background: rgba(255,255,255,0.055); overflow: hidden; }
+  .bar-fill { display: block; height: 100%; border-radius: 999px; }
+  .bar-val { font-size: 13px; color: rgba(255,255,255,0.38); font-variant-numeric: tabular-nums; text-align: right; }
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 26px; }
+  .chip { background: rgba(255,255,255,0.055); border: 1px solid rgba(255,255,255,0.12); padding: 9px 16px; border-radius: 999px; font-size: 14px; font-weight: 600; }
+  .verdict-card {
+    margin: 10px auto 0; max-width: 640px; padding: 44px 40px; border-radius: 30px;
+    background: rgba(255,255,255,0.055); border: 1.5px solid rgba(255,255,255,0.12);
+    box-shadow: 0 30px 90px -30px #7c3aed66;
+  }
+  .verdict-emoji { font-size: 58px; }
+  .verdict-title { font-size: clamp(34px, 6vw, 56px); font-weight: 800; letter-spacing: -0.02em; margin: 12px 0 14px; }
+  .verdict-blurb { color: rgba(255,255,255,0.62); font-size: clamp(15px, 2vw, 18px); line-height: 1.65; }
+  .cta { display: inline-block; margin-top: 30px; padding: 18px 34px; border-radius: 20px; background: rgba(255,255,255,0.055); border: 1.5px solid #ff6ec4; font-size: clamp(17px, 3vw, 24px); font-weight: 700; }
+  /* reveals */
+  .rv { opacity: 0; }
+  .slide.active .rv { animation: rvIn .7s cubic-bezier(.2,.7,.25,1) forwards; animation-delay: var(--d, 0s); }
+  @keyframes rvIn { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
+  #confetti { position: fixed; inset: 0; z-index: 20; pointer-events: none; }
+  @media (max-width: 640px) {
+    .clock-side { max-width: none; }
+    .bar-row { grid-template-columns: 1fr; gap: 6px; }
+    .bar-val { text-align: left; }
+    .verdict-card { padding: 30px 22px; }
+  }</style>
+</head>
+<body>
+  <div class="progress"></div>
+  <header class="topbar">
+    <span class="wordmark">git<span class="grad">-wrapped</span></span>
+    <div class="actions">
+      <button class="btn" id="save">⬇ Save share card</button>
+      <button class="btn" onclick="location.reload()">↻ Replay</button>
+    </div>
+  </header>
+  <main class="stage"><section class="slide" data-title="Cover"><div class="inner">
+    <div class="kicker rv" style="--d:.05s">YOUR YEAR IN CODE</div>
+    <h1 class="rv" style="--d:.15s"><span class="grad">demo-repo</span></h1>
+    <p class="sub rv" style="--d:.3s">Sep 2024 – Jul 2026 · 970 commits · 3 authors</p>
+    <p class="hintline rv" style="--d:.45s">This story was generated 100% locally. No account, no upload, no tracking.</p>
+  </div></section>
+<section class="slide" data-title="Total commits"><div class="inner">
+    <div class="kicker rv" style="--d:.05s">CHAPTER 01 · THE NUMBERS</div>
+    <div class="stat-big grad rv" style="--d:.15s" data-cu="970">0</div>
+    <p class="headline-sm rv" style="--d:.3s">commits shipped</p>
+    <div class="cards rv" style="--d:.45s">
+      <div class="mini"><b>441</b><span>active days</span></div>
+      <div class="mini"><b>2.2</b><span>avg / active day</span></div>
+      <div class="mini"><b>+1,045</b><span>lines added</span></div>
+      <div class="mini"><b>−0</b><span>lines deleted</span></div>
+    </div>
+    <p class="quote rv" style="--d:.6s">It all started on <b>2024-09-02</b>:<br>“bump deps 🐛”</p>
+  </div></section>
+<section class="slide" data-title="Heatmap"><div class="inner">
+    <div class="kicker rv" style="--d:.05s">CHAPTER 02 · THE GRIND</div>
+    <h2 class="rv" style="--d:.15s">Every day you <span class="grad">showed up</span></h2>
+    <div class="chart rv" style="--d:.3s"><svg viewBox="0 0 882 156" width="100%" style="max-width:900px" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Commit heatmap">
+    <text x="34" y="12" font-size="10" fill="rgba(255,255,255,0.38)" font-family="system-ui,sans-serif">Jul</text><text x="130" y="12" font-size="10" fill="rgba(255,255,255,0.38)" font-family="system-ui,sans-serif">Sep</text><text x="194" y="12" font-size="10" fill="rgba(255,255,255,0.38)" font-family="system-ui,sans-serif">Oct</text><text x="258" y="12" font-size="10" fill="rgba(255,255,255,0.38)" font-family="system-ui,sans-serif">Nov</text><text x="338" y="12" font-size="10" fill="rgba(255,255,255,0.38)" font-family="system-ui,sans-serif">Dec</text><text x="402" y="12" font-size="10" fill="rgba(255,255,255,0.38)" font-family="system-ui,sans-serif">Jan</text><text x="466" y="12" font-size="10" fill="rgba(255,255,255,0.38)" font-family="system-ui,sans-serif">Feb</text><text x="530" y="12" font-size="10" fill="rgba(255,255,255,0.38)" font-family="system-ui,sans-serif">Mar</text><text x="610" y="12" font-size="10" fill="rgba(255,255,255,0.38)" font-family="system-ui,sans-serif">Apr</text><text x="674" y="12" font-size="10" fill="rgba(255,255,255,0.38)" font-family="system-ui,sans-serif">May</text><text x="754" y="12" font-size="10" fill="rgba(255,255,255,0.38)" font-family="system-ui,sans-serif">Jun</text><text x="818" y="12" font-size="10" fill="rgba(255,255,255,0.38)" font-family="system-ui,sans-serif">Jul</text><text x="24" y="46" font-size="10" fill="rgba(255,255,255,0.38)" text-anchor="end" font-family="system-ui,sans-serif">Mon</text><text x="24" y="78" font-size="10" fill="rgba(255,255,255,0.38)" text-anchor="end" font-family="system-ui,sans-serif">Wed</text><text x="24" y="110" font-size="10" fill="rgba(255,255,255,0.38)" text-anchor="end" font-family="system-ui,sans-serif">Fri</text><rect x="34" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2025-07-27: 0 commits</title></rect><rect x="34" y="36" width="13" height="13" rx="3" fill="#e754c8"><title>2025-07-28: 3 commits</title></rect><rect x="34" y="52" width="13" height="13" rx="3" fill="#1c1930"><title>2025-07-29: 0 commits</title></rect><rect x="34" y="68" width="13" height="13" rx="3" fill="#41286b"><title>2025-07-30: 1 commit</title></rect><rect x="34" y="84" width="13" height="13" rx="3" fill="#41286b"><title>2025-07-31: 1 commit</title></rect><rect x="34" y="100" width="13" height="13" rx="3" fill="#e754c8"><title>2025-08-01: 3 commits</title></rect><rect x="34" y="116" width="13" height="13" rx="3" fill="#41286b"><title>2025-08-02: 1 commit</title></rect><rect x="50" y="20" width="13" height="13" rx="3" fill="#e754c8"><title>2025-08-03: 3 commits</title></rect><rect x="50" y="36" width="13" height="13" rx="3" fill="#41286b"><title>2025-08-04: 1 commit</title></rect><rect x="50" y="52" width="13" height="13" rx="3" fill="#e754c8"><title>2025-08-05: 3 commits</title></rect><rect x="50" y="68" width="13" height="13" rx="3" fill="#e754c8"><title>2025-08-06: 3 commits</title></rect><rect x="50" y="84" width="13" height="13" rx="3" fill="#8c3fae"><title>2025-08-07: 2 commits</title></rect><rect x="50" y="100" width="13" height="13" rx="3" fill="#8c3fae"><title>2025-08-08: 2 commits</title></rect><rect x="50" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2025-08-09: 0 commits</title></rect><rect x="66" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2025-08-10: 0 commits</title></rect><rect x="66" y="36" width="13" height="13" rx="3" fill="#1c1930"><title>2025-08-11: 0 commits</title></rect><rect x="66" y="52" width="13" height="13" rx="3" fill="#1c1930"><title>2025-08-12: 0 commits</title></rect><rect x="66" y="68" width="13" height="13" rx="3" fill="#41286b"><title>2025-08-13: 1 commit</title></rect><rect x="66" y="84" width="13" height="13" rx="3" fill="#1c1930"><title>2025-08-14: 0 commits</title></rect><rect x="66" y="100" width="13" height="13" rx="3" fill="#e754c8"><title>2025-08-15: 3 commits</title></rect><rect x="66" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2025-08-16: 0 commits</title></rect><rect x="82" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2025-08-17: 0 commits</title></rect><rect x="82" y="36" width="13" height="13" rx="3" fill="#1c1930"><title>2025-08-18: 0 commits</title></rect><rect x="82" y="52" width="13" height="13" rx="3" fill="#1c1930"><title>2025-08-19: 0 commits</title></rect><rect x="82" y="68" width="13" height="13" rx="3" fill="#e754c8"><title>2025-08-20: 3 commits</title></rect><rect x="82" y="84" width="13" height="13" rx="3" fill="#e754c8"><title>2025-08-21: 3 commits</title></rect><rect x="82" y="100" width="13" height="13" rx="3" fill="#1c1930"><title>2025-08-22: 0 commits</title></rect><rect x="82" y="116" width="13" height="13" rx="3" fill="#41286b"><title>2025-08-23: 1 commit</title></rect><rect x="98" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2025-08-24: 0 commits</title></rect><rect x="98" y="36" width="13" height="13" rx="3" fill="#1c1930"><title>2025-08-25: 0 commits</title></rect><rect x="98" y="52" width="13" height="13" rx="3" fill="#41286b"><title>2025-08-26: 1 commit</title></rect><rect x="98" y="68" width="13" height="13" rx="3" fill="#e754c8"><title>2025-08-27: 3 commits</title></rect><rect x="98" y="84" width="13" height="13" rx="3" fill="#8c3fae"><title>2025-08-28: 2 commits</title></rect><rect x="98" y="100" width="13" height="13" rx="3" fill="#e754c8"><title>2025-08-29: 3 commits</title></rect><rect x="98" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2025-08-30: 0 commits</title></rect><rect x="114" y="20" width="13" height="13" rx="3" fill="#e754c8"><title>2025-08-31: 4 commits</title></rect><rect x="114" y="36" width="13" height="13" rx="3" fill="#8c3fae"><title>2025-09-01: 2 commits</title></rect><rect x="114" y="52" width="13" height="13" rx="3" fill="#e754c8"><title>2025-09-02: 3 commits</title></rect><rect x="114" y="68" width="13" height="13" rx="3" fill="#41286b"><title>2025-09-03: 1 commit</title></rect><rect x="114" y="84" width="13" height="13" rx="3" fill="#41286b"><title>2025-09-04: 1 commit</title></rect><rect x="114" y="100" width="13" height="13" rx="3" fill="#1c1930"><title>2025-09-05: 0 commits</title></rect><rect x="114" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2025-09-06: 0 commits</title></rect><rect x="130" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2025-09-07: 0 commits</title></rect><rect x="130" y="36" width="13" height="13" rx="3" fill="#8c3fae"><title>2025-09-08: 2 commits</title></rect><rect x="130" y="52" width="13" height="13" rx="3" fill="#e754c8"><title>2025-09-09: 3 commits</title></rect><rect x="130" y="68" width="13" height="13" rx="3" fill="#e754c8"><title>2025-09-10: 3 commits</title></rect><rect x="130" y="84" width="13" height="13" rx="3" fill="#1c1930"><title>2025-09-11: 0 commits</title></rect><rect x="130" y="100" width="13" height="13" rx="3" fill="#e754c8"><title>2025-09-12: 3 commits</title></rect><rect x="130" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2025-09-13: 0 commits</title></rect><rect x="146" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2025-09-14: 0 commits</title></rect><rect x="146" y="36" width="13" height="13" rx="3" fill="#41286b"><title>2025-09-15: 1 commit</title></rect><rect x="146" y="52" width="13" height="13" rx="3" fill="#8c3fae"><title>2025-09-16: 2 commits</title></rect><rect x="146" y="68" width="13" height="13" rx="3" fill="#8c3fae"><title>2025-09-17: 2 commits</title></rect><rect x="146" y="84" width="13" height="13" rx="3" fill="#1c1930"><title>2025-09-18: 0 commits</title></rect><rect x="146" y="100" width="13" height="13" rx="3" fill="#8c3fae"><title>2025-09-19: 2 commits</title></rect><rect x="146" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2025-09-20: 0 commits</title></rect><rect x="162" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2025-09-21: 0 commits</title></rect><rect x="162" y="36" width="13" height="13" rx="3" fill="#41286b"><title>2025-09-22: 1 commit</title></rect><rect x="162" y="52" width="13" height="13" rx="3" fill="#1c1930"><title>2025-09-23: 0 commits</title></rect><rect x="162" y="68" width="13" height="13" rx="3" fill="#1c1930"><title>2025-09-24: 0 commits</title></rect><rect x="162" y="84" width="13" height="13" rx="3" fill="#e754c8"><title>2025-09-25: 3 commits</title></rect><rect x="162" y="100" width="13" height="13" rx="3" fill="#1c1930"><title>2025-09-26: 0 commits</title></rect><rect x="162" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2025-09-27: 0 commits</title></rect><rect x="178" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2025-09-28: 0 commits</title></rect><rect x="178" y="36" width="13" height="13" rx="3" fill="#e754c8"><title>2025-09-29: 3 commits</title></rect><rect x="178" y="52" width="13" height="13" rx="3" fill="#8c3fae"><title>2025-09-30: 2 commits</title></rect><rect x="178" y="68" width="13" height="13" rx="3" fill="#8c3fae"><title>2025-10-01: 2 commits</title></rect><rect x="178" y="84" width="13" height="13" rx="3" fill="#41286b"><title>2025-10-02: 1 commit</title></rect><rect x="178" y="100" width="13" height="13" rx="3" fill="#41286b"><title>2025-10-03: 1 commit</title></rect><rect x="178" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2025-10-04: 0 commits</title></rect><rect x="194" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2025-10-05: 0 commits</title></rect><rect x="194" y="36" width="13" height="13" rx="3" fill="#e754c8"><title>2025-10-06: 3 commits</title></rect><rect x="194" y="52" width="13" height="13" rx="3" fill="#8c3fae"><title>2025-10-07: 2 commits</title></rect><rect x="194" y="68" width="13" height="13" rx="3" fill="#41286b"><title>2025-10-08: 1 commit</title></rect><rect x="194" y="84" width="13" height="13" rx="3" fill="#e754c8"><title>2025-10-09: 3 commits</title></rect><rect x="194" y="100" width="13" height="13" rx="3" fill="#1c1930"><title>2025-10-10: 0 commits</title></rect><rect x="194" y="116" width="13" height="13" rx="3" fill="#e754c8"><title>2025-10-11: 3 commits</title></rect><rect x="210" y="20" width="13" height="13" rx="3" fill="#8c3fae"><title>2025-10-12: 2 commits</title></rect><rect x="210" y="36" width="13" height="13" rx="3" fill="#e754c8"><title>2025-10-13: 3 commits</title></rect><rect x="210" y="52" width="13" height="13" rx="3" fill="#41286b"><title>2025-10-14: 1 commit</title></rect><rect x="210" y="68" width="13" height="13" rx="3" fill="#1c1930"><title>2025-10-15: 0 commits</title></rect><rect x="210" y="84" width="13" height="13" rx="3" fill="#41286b"><title>2025-10-16: 1 commit</title></rect><rect x="210" y="100" width="13" height="13" rx="3" fill="#8c3fae"><title>2025-10-17: 2 commits</title></rect><rect x="210" y="116" width="13" height="13" rx="3" fill="#e754c8"><title>2025-10-18: 3 commits</title></rect><rect x="226" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2025-10-19: 0 commits</title></rect><rect x="226" y="36" width="13" height="13" rx="3" fill="#8c3fae"><title>2025-10-20: 2 commits</title></rect><rect x="226" y="52" width="13" height="13" rx="3" fill="#1c1930"><title>2025-10-21: 0 commits</title></rect><rect x="226" y="68" width="13" height="13" rx="3" fill="#e754c8"><title>2025-10-22: 3 commits</title></rect><rect x="226" y="84" width="13" height="13" rx="3" fill="#8c3fae"><title>2025-10-23: 2 commits</title></rect><rect x="226" y="100" width="13" height="13" rx="3" fill="#41286b"><title>2025-10-24: 1 commit</title></rect><rect x="226" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2025-10-25: 0 commits</title></rect><rect x="242" y="20" width="13" height="13" rx="3" fill="#e754c8"><title>2025-10-26: 3 commits</title></rect><rect x="242" y="36" width="13" height="13" rx="3" fill="#1c1930"><title>2025-10-27: 0 commits</title></rect><rect x="242" y="52" width="13" height="13" rx="3" fill="#e754c8"><title>2025-10-28: 3 commits</title></rect><rect x="242" y="68" width="13" height="13" rx="3" fill="#8c3fae"><title>2025-10-29: 2 commits</title></rect><rect x="242" y="84" width="13" height="13" rx="3" fill="#1c1930"><title>2025-10-30: 0 commits</title></rect><rect x="242" y="100" width="13" height="13" rx="3" fill="#ffc36e"><title>2025-10-31: 6 commits</title></rect><rect x="242" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2025-11-01: 0 commits</title></rect><rect x="258" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2025-11-02: 0 commits</title></rect><rect x="258" y="36" width="13" height="13" rx="3" fill="#1c1930"><title>2025-11-03: 0 commits</title></rect><rect x="258" y="52" width="13" height="13" rx="3" fill="#41286b"><title>2025-11-04: 1 commit</title></rect><rect x="258" y="68" width="13" height="13" rx="3" fill="#41286b"><title>2025-11-05: 1 commit</title></rect><rect x="258" y="84" width="13" height="13" rx="3" fill="#41286b"><title>2025-11-06: 1 commit</title></rect><rect x="258" y="100" width="13" height="13" rx="3" fill="#e754c8"><title>2025-11-07: 3 commits</title></rect><rect x="258" y="116" width="13" height="13" rx="3" fill="#e754c8"><title>2025-11-08: 3 commits</title></rect><rect x="274" y="20" width="13" height="13" rx="3" fill="#8c3fae"><title>2025-11-09: 2 commits</title></rect><rect x="274" y="36" width="13" height="13" rx="3" fill="#8c3fae"><title>2025-11-10: 2 commits</title></rect><rect x="274" y="52" width="13" height="13" rx="3" fill="#e754c8"><title>2025-11-11: 3 commits</title></rect><rect x="274" y="68" width="13" height="13" rx="3" fill="#1c1930"><title>2025-11-12: 0 commits</title></rect><rect x="274" y="84" width="13" height="13" rx="3" fill="#8c3fae"><title>2025-11-13: 2 commits</title></rect><rect x="274" y="100" width="13" height="13" rx="3" fill="#1c1930"><title>2025-11-14: 0 commits</title></rect><rect x="274" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2025-11-15: 0 commits</title></rect><rect x="290" y="20" width="13" height="13" rx="3" fill="#8c3fae"><title>2025-11-16: 2 commits</title></rect><rect x="290" y="36" width="13" height="13" rx="3" fill="#8c3fae"><title>2025-11-17: 2 commits</title></rect><rect x="290" y="52" width="13" height="13" rx="3" fill="#41286b"><title>2025-11-18: 1 commit</title></rect><rect x="290" y="68" width="13" height="13" rx="3" fill="#e754c8"><title>2025-11-19: 3 commits</title></rect><rect x="290" y="84" width="13" height="13" rx="3" fill="#1c1930"><title>2025-11-20: 0 commits</title></rect><rect x="290" y="100" width="13" height="13" rx="3" fill="#41286b"><title>2025-11-21: 1 commit</title></rect><rect x="290" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2025-11-22: 0 commits</title></rect><rect x="306" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2025-11-23: 0 commits</title></rect><rect x="306" y="36" width="13" height="13" rx="3" fill="#8c3fae"><title>2025-11-24: 2 commits</title></rect><rect x="306" y="52" width="13" height="13" rx="3" fill="#1c1930"><title>2025-11-25: 0 commits</title></rect><rect x="306" y="68" width="13" height="13" rx="3" fill="#8c3fae"><title>2025-11-26: 2 commits</title></rect><rect x="306" y="84" width="13" height="13" rx="3" fill="#8c3fae"><title>2025-11-27: 2 commits</title></rect><rect x="306" y="100" width="13" height="13" rx="3" fill="#41286b"><title>2025-11-28: 1 commit</title></rect><rect x="306" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2025-11-29: 0 commits</title></rect><rect x="322" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2025-11-30: 0 commits</title></rect><rect x="322" y="36" width="13" height="13" rx="3" fill="#1c1930"><title>2025-12-01: 0 commits</title></rect><rect x="322" y="52" width="13" height="13" rx="3" fill="#e754c8"><title>2025-12-02: 3 commits</title></rect><rect x="322" y="68" width="13" height="13" rx="3" fill="#1c1930"><title>2025-12-03: 0 commits</title></rect><rect x="322" y="84" width="13" height="13" rx="3" fill="#1c1930"><title>2025-12-04: 0 commits</title></rect><rect x="322" y="100" width="13" height="13" rx="3" fill="#e754c8"><title>2025-12-05: 3 commits</title></rect><rect x="322" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2025-12-06: 0 commits</title></rect><rect x="338" y="20" width="13" height="13" rx="3" fill="#e754c8"><title>2025-12-07: 3 commits</title></rect><rect x="338" y="36" width="13" height="13" rx="3" fill="#1c1930"><title>2025-12-08: 0 commits</title></rect><rect x="338" y="52" width="13" height="13" rx="3" fill="#1c1930"><title>2025-12-09: 0 commits</title></rect><rect x="338" y="68" width="13" height="13" rx="3" fill="#ffc36e"><title>2025-12-10: 5 commits</title></rect><rect x="338" y="84" width="13" height="13" rx="3" fill="#ffc36e"><title>2025-12-11: 5 commits</title></rect><rect x="338" y="100" width="13" height="13" rx="3" fill="#1c1930"><title>2025-12-12: 0 commits</title></rect><rect x="338" y="116" width="13" height="13" rx="3" fill="#41286b"><title>2025-12-13: 1 commit</title></rect><rect x="354" y="20" width="13" height="13" rx="3" fill="#e754c8"><title>2025-12-14: 3 commits</title></rect><rect x="354" y="36" width="13" height="13" rx="3" fill="#41286b"><title>2025-12-15: 1 commit</title></rect><rect x="354" y="52" width="13" height="13" rx="3" fill="#e754c8"><title>2025-12-16: 3 commits</title></rect><rect x="354" y="68" width="13" height="13" rx="3" fill="#1c1930"><title>2025-12-17: 0 commits</title></rect><rect x="354" y="84" width="13" height="13" rx="3" fill="#1c1930"><title>2025-12-18: 0 commits</title></rect><rect x="354" y="100" width="13" height="13" rx="3" fill="#1c1930"><title>2025-12-19: 0 commits</title></rect><rect x="354" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2025-12-20: 0 commits</title></rect><rect x="370" y="20" width="13" height="13" rx="3" fill="#41286b"><title>2025-12-21: 1 commit</title></rect><rect x="370" y="36" width="13" height="13" rx="3" fill="#e754c8"><title>2025-12-22: 3 commits</title></rect><rect x="370" y="52" width="13" height="13" rx="3" fill="#41286b"><title>2025-12-23: 1 commit</title></rect><rect x="370" y="68" width="13" height="13" rx="3" fill="#8c3fae"><title>2025-12-24: 2 commits</title></rect><rect x="370" y="84" width="13" height="13" rx="3" fill="#8c3fae"><title>2025-12-25: 2 commits</title></rect><rect x="370" y="100" width="13" height="13" rx="3" fill="#41286b"><title>2025-12-26: 1 commit</title></rect><rect x="370" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2025-12-27: 0 commits</title></rect><rect x="386" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2025-12-28: 0 commits</title></rect><rect x="386" y="36" width="13" height="13" rx="3" fill="#e754c8"><title>2025-12-29: 3 commits</title></rect><rect x="386" y="52" width="13" height="13" rx="3" fill="#e754c8"><title>2025-12-30: 3 commits</title></rect><rect x="386" y="68" width="13" height="13" rx="3" fill="#41286b"><title>2025-12-31: 1 commit</title></rect><rect x="386" y="84" width="13" height="13" rx="3" fill="#41286b"><title>2026-01-01: 1 commit</title></rect><rect x="386" y="100" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-01-02: 2 commits</title></rect><rect x="386" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2026-01-03: 0 commits</title></rect><rect x="402" y="20" width="13" height="13" rx="3" fill="#ffc36e"><title>2026-01-04: 6 commits</title></rect><rect x="402" y="36" width="13" height="13" rx="3" fill="#1c1930"><title>2026-01-05: 0 commits</title></rect><rect x="402" y="52" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-01-06: 2 commits</title></rect><rect x="402" y="68" width="13" height="13" rx="3" fill="#1c1930"><title>2026-01-07: 0 commits</title></rect><rect x="402" y="84" width="13" height="13" rx="3" fill="#e754c8"><title>2026-01-08: 3 commits</title></rect><rect x="402" y="100" width="13" height="13" rx="3" fill="#1c1930"><title>2026-01-09: 0 commits</title></rect><rect x="402" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2026-01-10: 0 commits</title></rect><rect x="418" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2026-01-11: 0 commits</title></rect><rect x="418" y="36" width="13" height="13" rx="3" fill="#41286b"><title>2026-01-12: 1 commit</title></rect><rect x="418" y="52" width="13" height="13" rx="3" fill="#e754c8"><title>2026-01-13: 3 commits</title></rect><rect x="418" y="68" width="13" height="13" rx="3" fill="#1c1930"><title>2026-01-14: 0 commits</title></rect><rect x="418" y="84" width="13" height="13" rx="3" fill="#1c1930"><title>2026-01-15: 0 commits</title></rect><rect x="418" y="100" width="13" height="13" rx="3" fill="#1c1930"><title>2026-01-16: 0 commits</title></rect><rect x="418" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2026-01-17: 0 commits</title></rect><rect x="434" y="20" width="13" height="13" rx="3" fill="#41286b"><title>2026-01-18: 1 commit</title></rect><rect x="434" y="36" width="13" height="13" rx="3" fill="#1c1930"><title>2026-01-19: 0 commits</title></rect><rect x="434" y="52" width="13" height="13" rx="3" fill="#1c1930"><title>2026-01-20: 0 commits</title></rect><rect x="434" y="68" width="13" height="13" rx="3" fill="#1c1930"><title>2026-01-21: 0 commits</title></rect><rect x="434" y="84" width="13" height="13" rx="3" fill="#1c1930"><title>2026-01-22: 0 commits</title></rect><rect x="434" y="100" width="13" height="13" rx="3" fill="#1c1930"><title>2026-01-23: 0 commits</title></rect><rect x="434" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2026-01-24: 0 commits</title></rect><rect x="450" y="20" width="13" height="13" rx="3" fill="#e754c8"><title>2026-01-25: 3 commits</title></rect><rect x="450" y="36" width="13" height="13" rx="3" fill="#1c1930"><title>2026-01-26: 0 commits</title></rect><rect x="450" y="52" width="13" height="13" rx="3" fill="#e754c8"><title>2026-01-27: 3 commits</title></rect><rect x="450" y="68" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-01-28: 2 commits</title></rect><rect x="450" y="84" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-01-29: 2 commits</title></rect><rect x="450" y="100" width="13" height="13" rx="3" fill="#41286b"><title>2026-01-30: 1 commit</title></rect><rect x="450" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2026-01-31: 0 commits</title></rect><rect x="466" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2026-02-01: 0 commits</title></rect><rect x="466" y="36" width="13" height="13" rx="3" fill="#ffc36e"><title>2026-02-02: 6 commits</title></rect><rect x="466" y="52" width="13" height="13" rx="3" fill="#41286b"><title>2026-02-03: 1 commit</title></rect><rect x="466" y="68" width="13" height="13" rx="3" fill="#ffc36e"><title>2026-02-04: 5 commits</title></rect><rect x="466" y="84" width="13" height="13" rx="3" fill="#e754c8"><title>2026-02-05: 3 commits</title></rect><rect x="466" y="100" width="13" height="13" rx="3" fill="#41286b"><title>2026-02-06: 1 commit</title></rect><rect x="466" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2026-02-07: 0 commits</title></rect><rect x="482" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2026-02-08: 0 commits</title></rect><rect x="482" y="36" width="13" height="13" rx="3" fill="#1c1930"><title>2026-02-09: 0 commits</title></rect><rect x="482" y="52" width="13" height="13" rx="3" fill="#e754c8"><title>2026-02-10: 3 commits</title></rect><rect x="482" y="68" width="13" height="13" rx="3" fill="#e754c8"><title>2026-02-11: 3 commits</title></rect><rect x="482" y="84" width="13" height="13" rx="3" fill="#41286b"><title>2026-02-12: 1 commit</title></rect><rect x="482" y="100" width="13" height="13" rx="3" fill="#41286b"><title>2026-02-13: 1 commit</title></rect><rect x="482" y="116" width="13" height="13" rx="3" fill="#41286b"><title>2026-02-14: 1 commit</title></rect><rect x="498" y="20" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-02-15: 2 commits</title></rect><rect x="498" y="36" width="13" height="13" rx="3" fill="#e754c8"><title>2026-02-16: 3 commits</title></rect><rect x="498" y="52" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-02-17: 2 commits</title></rect><rect x="498" y="68" width="13" height="13" rx="3" fill="#ffc36e"><title>2026-02-18: 5 commits</title></rect><rect x="498" y="84" width="13" height="13" rx="3" fill="#1c1930"><title>2026-02-19: 0 commits</title></rect><rect x="498" y="100" width="13" height="13" rx="3" fill="#41286b"><title>2026-02-20: 1 commit</title></rect><rect x="498" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2026-02-21: 0 commits</title></rect><rect x="514" y="20" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-02-22: 2 commits</title></rect><rect x="514" y="36" width="13" height="13" rx="3" fill="#1c1930"><title>2026-02-23: 0 commits</title></rect><rect x="514" y="52" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-02-24: 2 commits</title></rect><rect x="514" y="68" width="13" height="13" rx="3" fill="#1c1930"><title>2026-02-25: 0 commits</title></rect><rect x="514" y="84" width="13" height="13" rx="3" fill="#1c1930"><title>2026-02-26: 0 commits</title></rect><rect x="514" y="100" width="13" height="13" rx="3" fill="#e754c8"><title>2026-02-27: 3 commits</title></rect><rect x="514" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2026-02-28: 0 commits</title></rect><rect x="530" y="20" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-03-01: 2 commits</title></rect><rect x="530" y="36" width="13" height="13" rx="3" fill="#41286b"><title>2026-03-02: 1 commit</title></rect><rect x="530" y="52" width="13" height="13" rx="3" fill="#1c1930"><title>2026-03-03: 0 commits</title></rect><rect x="530" y="68" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-03-04: 2 commits</title></rect><rect x="530" y="84" width="13" height="13" rx="3" fill="#41286b"><title>2026-03-05: 1 commit</title></rect><rect x="530" y="100" width="13" height="13" rx="3" fill="#e754c8"><title>2026-03-06: 3 commits</title></rect><rect x="530" y="116" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-03-07: 2 commits</title></rect><rect x="546" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2026-03-08: 0 commits</title></rect><rect x="546" y="36" width="13" height="13" rx="3" fill="#1c1930"><title>2026-03-09: 0 commits</title></rect><rect x="546" y="52" width="13" height="13" rx="3" fill="#41286b"><title>2026-03-10: 1 commit</title></rect><rect x="546" y="68" width="13" height="13" rx="3" fill="#1c1930"><title>2026-03-11: 0 commits</title></rect><rect x="546" y="84" width="13" height="13" rx="3" fill="#1c1930"><title>2026-03-12: 0 commits</title></rect><rect x="546" y="100" width="13" height="13" rx="3" fill="#e754c8"><title>2026-03-13: 4 commits</title></rect><rect x="546" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2026-03-14: 0 commits</title></rect><rect x="562" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2026-03-15: 0 commits</title></rect><rect x="562" y="36" width="13" height="13" rx="3" fill="#e754c8"><title>2026-03-16: 4 commits</title></rect><rect x="562" y="52" width="13" height="13" rx="3" fill="#1c1930"><title>2026-03-17: 0 commits</title></rect><rect x="562" y="68" width="13" height="13" rx="3" fill="#41286b"><title>2026-03-18: 1 commit</title></rect><rect x="562" y="84" width="13" height="13" rx="3" fill="#e754c8"><title>2026-03-19: 3 commits</title></rect><rect x="562" y="100" width="13" height="13" rx="3" fill="#e754c8"><title>2026-03-20: 3 commits</title></rect><rect x="562" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2026-03-21: 0 commits</title></rect><rect x="578" y="20" width="13" height="13" rx="3" fill="#41286b"><title>2026-03-22: 1 commit</title></rect><rect x="578" y="36" width="13" height="13" rx="3" fill="#41286b"><title>2026-03-23: 1 commit</title></rect><rect x="578" y="52" width="13" height="13" rx="3" fill="#41286b"><title>2026-03-24: 1 commit</title></rect><rect x="578" y="68" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-03-25: 2 commits</title></rect><rect x="578" y="84" width="13" height="13" rx="3" fill="#e754c8"><title>2026-03-26: 3 commits</title></rect><rect x="578" y="100" width="13" height="13" rx="3" fill="#e754c8"><title>2026-03-27: 3 commits</title></rect><rect x="578" y="116" width="13" height="13" rx="3" fill="#41286b"><title>2026-03-28: 1 commit</title></rect><rect x="594" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2026-03-29: 0 commits</title></rect><rect x="594" y="36" width="13" height="13" rx="3" fill="#e754c8"><title>2026-03-30: 3 commits</title></rect><rect x="594" y="52" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-03-31: 2 commits</title></rect><rect x="594" y="68" width="13" height="13" rx="3" fill="#e754c8"><title>2026-04-01: 3 commits</title></rect><rect x="594" y="84" width="13" height="13" rx="3" fill="#41286b"><title>2026-04-02: 1 commit</title></rect><rect x="594" y="100" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-04-03: 2 commits</title></rect><rect x="594" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2026-04-04: 0 commits</title></rect><rect x="610" y="20" width="13" height="13" rx="3" fill="#41286b"><title>2026-04-05: 1 commit</title></rect><rect x="610" y="36" width="13" height="13" rx="3" fill="#1c1930"><title>2026-04-06: 0 commits</title></rect><rect x="610" y="52" width="13" height="13" rx="3" fill="#1c1930"><title>2026-04-07: 0 commits</title></rect><rect x="610" y="68" width="13" height="13" rx="3" fill="#e754c8"><title>2026-04-08: 3 commits</title></rect><rect x="610" y="84" width="13" height="13" rx="3" fill="#e754c8"><title>2026-04-09: 3 commits</title></rect><rect x="610" y="100" width="13" height="13" rx="3" fill="#41286b"><title>2026-04-10: 1 commit</title></rect><rect x="610" y="116" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-04-11: 2 commits</title></rect><rect x="626" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2026-04-12: 0 commits</title></rect><rect x="626" y="36" width="13" height="13" rx="3" fill="#e754c8"><title>2026-04-13: 4 commits</title></rect><rect x="626" y="52" width="13" height="13" rx="3" fill="#41286b"><title>2026-04-14: 1 commit</title></rect><rect x="626" y="68" width="13" height="13" rx="3" fill="#1c1930"><title>2026-04-15: 0 commits</title></rect><rect x="626" y="84" width="13" height="13" rx="3" fill="#e754c8"><title>2026-04-16: 3 commits</title></rect><rect x="626" y="100" width="13" height="13" rx="3" fill="#41286b"><title>2026-04-17: 1 commit</title></rect><rect x="626" y="116" width="13" height="13" rx="3" fill="#41286b"><title>2026-04-18: 1 commit</title></rect><rect x="642" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2026-04-19: 0 commits</title></rect><rect x="642" y="36" width="13" height="13" rx="3" fill="#41286b"><title>2026-04-20: 1 commit</title></rect><rect x="642" y="52" width="13" height="13" rx="3" fill="#e754c8"><title>2026-04-21: 3 commits</title></rect><rect x="642" y="68" width="13" height="13" rx="3" fill="#41286b"><title>2026-04-22: 1 commit</title></rect><rect x="642" y="84" width="13" height="13" rx="3" fill="#41286b"><title>2026-04-23: 1 commit</title></rect><rect x="642" y="100" width="13" height="13" rx="3" fill="#e754c8"><title>2026-04-24: 3 commits</title></rect><rect x="642" y="116" width="13" height="13" rx="3" fill="#41286b"><title>2026-04-25: 1 commit</title></rect><rect x="658" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2026-04-26: 0 commits</title></rect><rect x="658" y="36" width="13" height="13" rx="3" fill="#e754c8"><title>2026-04-27: 3 commits</title></rect><rect x="658" y="52" width="13" height="13" rx="3" fill="#e754c8"><title>2026-04-28: 3 commits</title></rect><rect x="658" y="68" width="13" height="13" rx="3" fill="#41286b"><title>2026-04-29: 1 commit</title></rect><rect x="658" y="84" width="13" height="13" rx="3" fill="#1c1930"><title>2026-04-30: 0 commits</title></rect><rect x="658" y="100" width="13" height="13" rx="3" fill="#41286b"><title>2026-05-01: 1 commit</title></rect><rect x="658" y="116" width="13" height="13" rx="3" fill="#e754c8"><title>2026-05-02: 3 commits</title></rect><rect x="674" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2026-05-03: 0 commits</title></rect><rect x="674" y="36" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-05-04: 2 commits</title></rect><rect x="674" y="52" width="13" height="13" rx="3" fill="#41286b"><title>2026-05-05: 1 commit</title></rect><rect x="674" y="68" width="13" height="13" rx="3" fill="#1c1930"><title>2026-05-06: 0 commits</title></rect><rect x="674" y="84" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-05-07: 2 commits</title></rect><rect x="674" y="100" width="13" height="13" rx="3" fill="#41286b"><title>2026-05-08: 1 commit</title></rect><rect x="674" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2026-05-09: 0 commits</title></rect><rect x="690" y="20" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-05-10: 2 commits</title></rect><rect x="690" y="36" width="13" height="13" rx="3" fill="#e754c8"><title>2026-05-11: 3 commits</title></rect><rect x="690" y="52" width="13" height="13" rx="3" fill="#1c1930"><title>2026-05-12: 0 commits</title></rect><rect x="690" y="68" width="13" height="13" rx="3" fill="#ffc36e"><title>2026-05-13: 5 commits</title></rect><rect x="690" y="84" width="13" height="13" rx="3" fill="#1c1930"><title>2026-05-14: 0 commits</title></rect><rect x="690" y="100" width="13" height="13" rx="3" fill="#41286b"><title>2026-05-15: 1 commit</title></rect><rect x="690" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2026-05-16: 0 commits</title></rect><rect x="706" y="20" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-05-17: 2 commits</title></rect><rect x="706" y="36" width="13" height="13" rx="3" fill="#41286b"><title>2026-05-18: 1 commit</title></rect><rect x="706" y="52" width="13" height="13" rx="3" fill="#41286b"><title>2026-05-19: 1 commit</title></rect><rect x="706" y="68" width="13" height="13" rx="3" fill="#e754c8"><title>2026-05-20: 3 commits</title></rect><rect x="706" y="84" width="13" height="13" rx="3" fill="#41286b"><title>2026-05-21: 1 commit</title></rect><rect x="706" y="100" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-05-22: 2 commits</title></rect><rect x="706" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2026-05-23: 0 commits</title></rect><rect x="722" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2026-05-24: 0 commits</title></rect><rect x="722" y="36" width="13" height="13" rx="3" fill="#1c1930"><title>2026-05-25: 0 commits</title></rect><rect x="722" y="52" width="13" height="13" rx="3" fill="#ffc36e"><title>2026-05-26: 5 commits</title></rect><rect x="722" y="68" width="13" height="13" rx="3" fill="#1c1930"><title>2026-05-27: 0 commits</title></rect><rect x="722" y="84" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-05-28: 2 commits</title></rect><rect x="722" y="100" width="13" height="13" rx="3" fill="#e754c8"><title>2026-05-29: 3 commits</title></rect><rect x="722" y="116" width="13" height="13" rx="3" fill="#ffc36e"><title>2026-05-30: 6 commits</title></rect><rect x="738" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2026-05-31: 0 commits</title></rect><rect x="738" y="36" width="13" height="13" rx="3" fill="#ffc36e"><title>2026-06-01: 5 commits</title></rect><rect x="738" y="52" width="13" height="13" rx="3" fill="#ffc36e"><title>2026-06-02: 5 commits</title></rect><rect x="738" y="68" width="13" height="13" rx="3" fill="#1c1930"><title>2026-06-03: 0 commits</title></rect><rect x="738" y="84" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-06-04: 2 commits</title></rect><rect x="738" y="100" width="13" height="13" rx="3" fill="#e754c8"><title>2026-06-05: 3 commits</title></rect><rect x="738" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2026-06-06: 0 commits</title></rect><rect x="754" y="20" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-06-07: 2 commits</title></rect><rect x="754" y="36" width="13" height="13" rx="3" fill="#1c1930"><title>2026-06-08: 0 commits</title></rect><rect x="754" y="52" width="13" height="13" rx="3" fill="#e754c8"><title>2026-06-09: 3 commits</title></rect><rect x="754" y="68" width="13" height="13" rx="3" fill="#1c1930"><title>2026-06-10: 0 commits</title></rect><rect x="754" y="84" width="13" height="13" rx="3" fill="#1c1930"><title>2026-06-11: 0 commits</title></rect><rect x="754" y="100" width="13" height="13" rx="3" fill="#e754c8"><title>2026-06-12: 3 commits</title></rect><rect x="754" y="116" width="13" height="13" rx="3" fill="#41286b"><title>2026-06-13: 1 commit</title></rect><rect x="770" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2026-06-14: 0 commits</title></rect><rect x="770" y="36" width="13" height="13" rx="3" fill="#41286b"><title>2026-06-15: 1 commit</title></rect><rect x="770" y="52" width="13" height="13" rx="3" fill="#1c1930"><title>2026-06-16: 0 commits</title></rect><rect x="770" y="68" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-06-17: 2 commits</title></rect><rect x="770" y="84" width="13" height="13" rx="3" fill="#41286b"><title>2026-06-18: 1 commit</title></rect><rect x="770" y="100" width="13" height="13" rx="3" fill="#1c1930"><title>2026-06-19: 0 commits</title></rect><rect x="770" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2026-06-20: 0 commits</title></rect><rect x="786" y="20" width="13" height="13" rx="3" fill="#e754c8"><title>2026-06-21: 3 commits</title></rect><rect x="786" y="36" width="13" height="13" rx="3" fill="#1c1930"><title>2026-06-22: 0 commits</title></rect><rect x="786" y="52" width="13" height="13" rx="3" fill="#1c1930"><title>2026-06-23: 0 commits</title></rect><rect x="786" y="68" width="13" height="13" rx="3" fill="#1c1930"><title>2026-06-24: 0 commits</title></rect><rect x="786" y="84" width="13" height="13" rx="3" fill="#e754c8"><title>2026-06-25: 3 commits</title></rect><rect x="786" y="100" width="13" height="13" rx="3" fill="#ffc36e"><title>2026-06-26: 6 commits</title></rect><rect x="786" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2026-06-27: 0 commits</title></rect><rect x="802" y="20" width="13" height="13" rx="3" fill="#e754c8"><title>2026-06-28: 3 commits</title></rect><rect x="802" y="36" width="13" height="13" rx="3" fill="#1c1930"><title>2026-06-29: 0 commits</title></rect><rect x="802" y="52" width="13" height="13" rx="3" fill="#41286b"><title>2026-06-30: 1 commit</title></rect><rect x="802" y="68" width="13" height="13" rx="3" fill="#41286b"><title>2026-07-01: 1 commit</title></rect><rect x="802" y="84" width="13" height="13" rx="3" fill="#41286b"><title>2026-07-02: 1 commit</title></rect><rect x="802" y="100" width="13" height="13" rx="3" fill="#e754c8"><title>2026-07-03: 3 commits</title></rect><rect x="802" y="116" width="13" height="13" rx="3" fill="#41286b"><title>2026-07-04: 1 commit</title></rect><rect x="818" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2026-07-05: 0 commits</title></rect><rect x="818" y="36" width="13" height="13" rx="3" fill="#1c1930"><title>2026-07-06: 0 commits</title></rect><rect x="818" y="52" width="13" height="13" rx="3" fill="#1c1930"><title>2026-07-07: 0 commits</title></rect><rect x="818" y="68" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-07-08: 2 commits</title></rect><rect x="818" y="84" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-07-09: 2 commits</title></rect><rect x="818" y="100" width="13" height="13" rx="3" fill="#e754c8"><title>2026-07-10: 3 commits</title></rect><rect x="818" y="116" width="13" height="13" rx="3" fill="#e754c8"><title>2026-07-11: 3 commits</title></rect><rect x="834" y="20" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-07-12: 2 commits</title></rect><rect x="834" y="36" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-07-13: 2 commits</title></rect><rect x="834" y="52" width="13" height="13" rx="3" fill="#e754c8"><title>2026-07-14: 3 commits</title></rect><rect x="834" y="68" width="13" height="13" rx="3" fill="#e754c8"><title>2026-07-15: 3 commits</title></rect><rect x="834" y="84" width="13" height="13" rx="3" fill="#1c1930"><title>2026-07-16: 0 commits</title></rect><rect x="834" y="100" width="13" height="13" rx="3" fill="#41286b"><title>2026-07-17: 1 commit</title></rect><rect x="834" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2026-07-18: 0 commits</title></rect><rect x="850" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2026-07-19: 0 commits</title></rect><rect x="850" y="36" width="13" height="13" rx="3" fill="#1c1930"><title>2026-07-20: 0 commits</title></rect><rect x="850" y="52" width="13" height="13" rx="3" fill="#1c1930"><title>2026-07-21: 0 commits</title></rect><rect x="850" y="68" width="13" height="13" rx="3" fill="#41286b"><title>2026-07-22: 1 commit</title></rect><rect x="850" y="84" width="13" height="13" rx="3" fill="#41286b"><title>2026-07-23: 1 commit</title></rect><rect x="850" y="100" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-07-24: 2 commits</title></rect><rect x="850" y="116" width="13" height="13" rx="3" fill="#8c3fae"><title>2026-07-25: 2 commits</title></rect><rect x="866" y="20" width="13" height="13" rx="3" fill="#1c1930"><title>2026-07-26: 0 commits</title></rect><rect x="866" y="36" width="13" height="13" rx="3" fill="#e754c8"><title>2026-07-27: 3 commits</title></rect><rect x="866" y="52" width="13" height="13" rx="3" fill="#41286b"><title>2026-07-28: 1 commit</title></rect><rect x="866" y="68" width="13" height="13" rx="3" fill="#1c1930"><title>2026-07-29: 0 commits</title></rect><rect x="866" y="84" width="13" height="13" rx="3" fill="#e754c8"><title>2026-07-30: 3 commits</title></rect><rect x="866" y="100" width="13" height="13" rx="3" fill="#1c1930"><title>2026-07-31: 0 commits</title></rect><rect x="866" y="116" width="13" height="13" rx="3" fill="#1c1930"><title>2026-08-01: 0 commits</title></rect>
+    <text x="772" y="148" font-size="10" fill="rgba(255,255,255,0.38)" text-anchor="end" font-family="system-ui,sans-serif">less</text>
+    <rect x="786" y="138" width="11" height="11" rx="3" fill="#1c1930"/><rect x="804" y="138" width="11" height="11" rx="3" fill="#41286b"/><rect x="822" y="138" width="11" height="11" rx="3" fill="#8c3fae"/><rect x="840" y="138" width="11" height="11" rx="3" fill="#e754c8"/><rect x="858" y="138" width="11" height="11" rx="3" fill="#ffc36e"/>
+    <text x="886" y="148" font-size="10" fill="rgba(255,255,255,0.38)" font-family="system-ui,sans-serif">more</text>
+  </svg></div>
+    <p class="sub rv" style="--d:.45s">Busiest day: <b>2026-06-26</b> with <b>6</b> commits</p>
+  </div></section>
+<section class="slide" data-title="Power hours"><div class="inner">
+    <div class="kicker rv" style="--d:.05s">CHAPTER 03 · THE CLOCK</div>
+    <h2 class="rv" style="--d:.15s">Your <span class="grad">power hours</span></h2>
+    <div class="clock-flex">
+      <div class="rv" style="--d:.3s"><svg viewBox="0 0 420 420" width="100%" style="max-width:380px" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Commits by hour">
+    <defs><linearGradient id="clockGrad" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#8a7dff"/><stop offset="100%" stop-color="#ff6ec4"/></linearGradient></defs>
+    <path d="M 212.34,88.19 A 121.83050847457628 121.83050847457628 0 0 1 239.27,91.74 L 228.26,136.23 A 76 76 0 0 0 211.46,134.01 Z" fill="url(#clockGrad)" opacity="0.53" ><title>12am — 47 commits</title></path><path d="M 260.47,35.14 A 182 182 0 0 1 297.96,50.67 L 246.73,143.46 A 76 76 0 0 0 231.08,136.98 Z" fill="url(#clockGrad)" opacity="1" stroke="#ffffff" stroke-width="1.5"><title>1am — 118 commits</title></path><path d="M 294.82,69.40 A 164.20338983050848 164.20338983050848 0 0 1 323.86,91.68 L 262.70,155.24 A 76 76 0 0 0 249.26,144.92 Z" fill="url(#clockGrad)" opacity="0.86" ><title>2am — 97 commits</title></path><path d="M 297.17,126.11 A 120.98305084745763 120.98305084745763 0 0 1 313.59,147.51 L 275.08,170.74 A 76 76 0 0 0 264.76,157.30 Z" fill="url(#clockGrad)" opacity="0.52" ><title>3am — 46 commits</title></path><path d="M 281.79,170.37 A 82 82 0 0 1 288.78,187.26 L 283.02,188.92 A 76 76 0 0 0 276.54,173.27 Z" fill="url(#clockGrad)" opacity="0.22" ><title>4am — 0 commits</title></path><path d="M 289.60,190.30 A 82 82 0 0 1 291.98,208.43 L 285.99,208.54 A 76 76 0 0 0 283.77,191.74 Z" fill="url(#clockGrad)" opacity="0.22" ><title>5am — 0 commits</title></path><path d="M 291.98,211.57 A 82 82 0 0 1 289.60,229.70 L 283.77,228.26 A 76 76 0 0 0 285.99,211.46 Z" fill="url(#clockGrad)" opacity="0.22" ><title>6am — 0 commits</title></path><path d="M 288.78,232.74 A 82 82 0 0 1 281.79,249.63 L 276.54,246.73 A 76 76 0 0 0 283.02,231.08 Z" fill="url(#clockGrad)" opacity="0.22" ><title>7am — 0 commits</title></path><path d="M 323.75,278.62 A 132.84745762711864 132.84745762711864 0 0 1 305.72,302.12 L 264.76,262.70 A 76 76 0 0 0 275.08,249.26 Z" fill="url(#clockGrad)" opacity="0.62" ><title>8am — 60 commits</title></path><path d="M 303.88,307.56 A 135.38983050847457 135.38983050847457 0 0 1 279.93,325.93 L 249.26,275.08 A 76 76 0 0 0 262.70,264.76 Z" fill="url(#clockGrad)" opacity="0.64" ><title>9am — 63 commits</title></path><path d="M 271.75,321.85 A 127.76271186440678 127.76271186440678 0 0 1 245.43,332.75 L 231.08,283.02 A 76 76 0 0 0 246.73,276.54 Z" fill="url(#clockGrad)" opacity="0.58" ><title>10am — 54 commits</title></path><path d="M 239.47,329.09 A 122.67796610169492 122.67796610169492 0 0 1 212.36,332.66 L 211.46,285.99 A 76 76 0 0 0 228.26,283.77 Z" fill="url(#clockGrad)" opacity="0.54" ><title>11am — 48 commits</title></path><path d="M 208.43,291.98 A 82 82 0 0 1 190.30,289.60 L 191.74,283.77 A 76 76 0 0 0 208.54,285.99 Z" fill="url(#clockGrad)" opacity="0.22" ><title>12pm — 0 commits</title></path><path d="M 187.26,288.78 A 82 82 0 0 1 170.37,281.79 L 173.27,276.54 A 76 76 0 0 0 188.92,283.02 Z" fill="url(#clockGrad)" opacity="0.22" ><title>1pm — 0 commits</title></path><path d="M 140.07,325.93 A 135.38983050847457 135.38983050847457 0 0 1 116.12,307.56 L 157.30,264.76 A 76 76 0 0 0 170.74,275.08 Z" fill="url(#clockGrad)" opacity="0.64" ><title>2pm — 63 commits</title></path><path d="M 120.38,296.24 A 124.37288135593221 124.37288135593221 0 0 1 103.50,274.24 L 144.92,249.26 A 76 76 0 0 0 155.24,262.70 Z" fill="url(#clockGrad)" opacity="0.55" ><title>3pm — 50 commits</title></path><path d="M 95.92,272.97 A 130.3050847457627 130.3050847457627 0 0 1 84.81,246.14 L 136.98,231.08 A 76 76 0 0 0 143.46,246.73 Z" fill="url(#clockGrad)" opacity="0.60" ><title>4pm — 57 commits</title></path><path d="M 130.40,229.70 A 82 82 0 0 1 128.02,211.57 L 134.01,211.46 A 76 76 0 0 0 136.23,228.26 Z" fill="url(#clockGrad)" opacity="0.22" ><title>5pm — 0 commits</title></path><path d="M 128.02,208.43 A 82 82 0 0 1 130.40,190.30 L 136.23,191.74 A 76 76 0 0 0 134.01,208.54 Z" fill="url(#clockGrad)" opacity="0.22" ><title>6pm — 0 commits</title></path><path d="M 131.22,187.26 A 82 82 0 0 1 138.21,170.37 L 143.46,173.27 A 76 76 0 0 0 136.98,188.92 Z" fill="url(#clockGrad)" opacity="0.22" ><title>7pm — 0 commits</title></path><path d="M 60.69,119.93 A 174.3728813559322 174.3728813559322 0 0 1 84.36,89.09 L 155.24,157.30 A 76 76 0 0 0 144.92,170.74 Z" fill="url(#clockGrad)" opacity="0.94" ><title>8pm — 109 commits</title></path><path d="M 120.23,116.72 A 129.45762711864407 129.45762711864407 0 0 1 143.13,99.15 L 170.74,144.92 A 76 76 0 0 0 157.30,155.24 Z" fill="url(#clockGrad)" opacity="0.59" ><title>9pm — 56 commits</title></path><path d="M 150.71,102.60 A 122.67796610169492 122.67796610169492 0 0 1 175.98,92.13 L 188.92,136.98 A 76 76 0 0 0 173.27,143.46 Z" fill="url(#clockGrad)" opacity="0.54" ><title>10pm — 48 commits</title></path><path d="M 179.31,85.98 A 127.76271186440678 127.76271186440678 0 0 1 207.55,82.26 L 208.54,134.01 A 76 76 0 0 0 191.74,136.23 Z" fill="url(#clockGrad)" opacity="0.58" ><title>11pm — 54 commits</title></path><text x="210" y="16" text-anchor="middle" font-size="12" font-weight="600" fill="rgba(255,255,255,0.38)" font-family="system-ui,sans-serif">12am</text><text x="404" y="214" text-anchor="middle" font-size="12" font-weight="600" fill="rgba(255,255,255,0.38)" font-family="system-ui,sans-serif">6am</text><text x="210" y="416" text-anchor="middle" font-size="12" font-weight="600" fill="rgba(255,255,255,0.38)" font-family="system-ui,sans-serif">12pm</text><text x="16" y="214" text-anchor="middle" font-size="12" font-weight="600" fill="rgba(255,255,255,0.38)" font-family="system-ui,sans-serif">6pm</text>
+    <text x="210" y="196" text-anchor="middle" font-size="44" font-weight="800" fill="#ffffff" font-family="system-ui,sans-serif">1am</text>
+    <text x="210" y="228" text-anchor="middle" font-size="12" letter-spacing="2" fill="rgba(255,255,255,0.38)" font-family="system-ui,sans-serif">PEAK HOUR</text>
+    <text x="210" y="252" text-anchor="middle" font-size="13" fill="rgba(255,255,255,0.62)" font-family="system-ui,sans-serif">118 commits</text>
+  </svg></div>
+      <div class="clock-side">
+        <div class="fact rv" style="--d:.45s"><b>1am</b><span>is when you commit most</span></div>
+        <div class="fact rv" style="--d:.55s"><b>18%</b><span>of commits landed on weekends</span></div>
+        <div class="fact rv" style="--d:.65s"><b>Friday</b><span>was your weekday of choice</span></div>
+      </div>
+    </div>
+  </div></section>
+<section class="slide" data-title="Languages"><div class="inner">
+      <div class="kicker rv" style="--d:.05s">CHAPTER 04 · THE STACK</div>
+      <h2 class="rv" style="--d:.15s">Your languages, <span class="grad">ranked</span></h2>
+      <div class="chart rv" style="--d:.3s"><div class="donut-wrap">
+    <svg viewBox="0 0 380 380" width="100%" style="max-width:330px" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Languages"><path d="M 193.27,56.04 A 134 134 0 0 1 210.52,322.42 L 202.86,273.01 A 84 84 0 0 0 192.05,106.03 Z" fill="#3178c6"><title>TypeScript — 47.9%</title></path><path d="M 204.02,323.26 A 134 134 0 0 1 56.99,173.78 L 106.62,179.83 A 84 84 0 0 0 198.79,273.54 Z" fill="#8da0c7"><title>Markdown — 29.4%</title></path><path d="M 57.94,167.30 A 134 134 0 0 1 101.45,89.43 L 134.49,126.95 A 84 84 0 0 0 107.21,175.77 Z" fill="#563d7c"><title>CSS — 11.6%</title></path><path d="M 106.47,85.22 A 134 134 0 0 1 186.73,56.04 L 187.95,106.03 A 84 84 0 0 0 137.64,124.32 Z" fill="#cbcb41"><title>JSON — 11.1%</title></path>
+      <text x="190" y="182" text-anchor="middle" font-size="34" font-weight="800" fill="#ffffff" font-family="system-ui,sans-serif">+1,045</text>
+      <text x="190" y="212" text-anchor="middle" font-size="12" letter-spacing="2" fill="rgba(255,255,255,0.38)" font-family="system-ui,sans-serif">LINES ADDED</text>
+    </svg>
+    <div class="legend">
+    <div class="lg-row rv" style="--d:0.15s">
+      <span class="lg-dot" style="background:#3178c6"></span>
+      <span class="lg-name">TypeScript</span>
+      <span class="lg-pct">48%</span>
+    </div>
+    <div class="lg-row rv" style="--d:0.22s">
+      <span class="lg-dot" style="background:#8da0c7"></span>
+      <span class="lg-name">Markdown</span>
+      <span class="lg-pct">29%</span>
+    </div>
+    <div class="lg-row rv" style="--d:0.29000000000000004s">
+      <span class="lg-dot" style="background:#563d7c"></span>
+      <span class="lg-name">CSS</span>
+      <span class="lg-pct">12%</span>
+    </div>
+    <div class="lg-row rv" style="--d:0.36s">
+      <span class="lg-dot" style="background:#cbcb41"></span>
+      <span class="lg-name">JSON</span>
+      <span class="lg-pct">11%</span>
+    </div></div>
+  </div></div>
+    </div></section>
+<section class="slide" data-title="Top files"><div class="inner">
+      <div class="kicker rv" style="--d:.05s">CHAPTER 05 · THE SCENE</div>
+      <h2 class="rv" style="--d:.15s">Your <span class="grad">ride-or-die</span> files</h2>
+      <div class="bars">
+      <div class="bar-row rv" style="--d:0.25s">
+        <span class="bar-label">README.md</span>
+        <span class="bar-track"><span class="bar-fill" style="width:100%;background:linear-gradient(90deg,#8a7dff,#ff6ec4)"></span></span>
+        <span class="bar-val">+191 / −0</span>
+      </div>
+      <div class="bar-row rv" style="--d:0.35s">
+        <span class="bar-label">src/utils.ts</span>
+        <span class="bar-track"><span class="bar-fill" style="width:71.20418848167539%;background:linear-gradient(90deg,#8a7dff,#ff6ec4)"></span></span>
+        <span class="bar-val">+136 / −0</span>
+      </div>
+      <div class="bar-row rv" style="--d:0.45s">
+        <span class="bar-label">src/cli.ts</span>
+        <span class="bar-track"><span class="bar-fill" style="width:64.3979057591623%;background:linear-gradient(90deg,#8a7dff,#ff6ec4)"></span></span>
+        <span class="bar-val">+123 / −0</span>
+      </div>
+      <div class="bar-row rv" style="--d:0.55s">
+        <span class="bar-label">src/styles.css</span>
+        <span class="bar-track"><span class="bar-fill" style="width:63.35078534031413%;background:linear-gradient(90deg,#8a7dff,#ff6ec4)"></span></span>
+        <span class="bar-val">+121 / −0</span>
+      </div>
+      <div class="bar-row rv" style="--d:0.65s">
+        <span class="bar-label">src/engine.ts</span>
+        <span class="bar-track"><span class="bar-fill" style="width:63.35078534031413%;background:linear-gradient(90deg,#8a7dff,#ff6ec4)"></span></span>
+        <span class="bar-val">+121 / −0</span>
+      </div></div>
+      <p class="quote rv" style="--d:.7s">You touched <b>README.md</b> more than anything else.<br>That's not a file anymore. That's a relationship.</p>
+    </div></section>
+<section class="slide" data-title="Commit lingo"><div class="inner">
+      <div class="kicker rv" style="--d:.05s">CHAPTER 06 · THE LANGUAGE OF LOVE</div>
+      <h2 class="rv" style="--d:.15s">How you <span class="grad">talk to git</span></h2>
+      <div class="bars">
+      <div class="bar-row rv" style="--d:0.2s">
+        <span class="bar-label mono">"fix"</span>
+        <span class="bar-track"><span class="bar-fill" style="width:100%;background:linear-gradient(90deg,#ff6ec4,#ffc36e)"></span></span>
+        <span class="bar-val">×324</span>
+      </div>
+      <div class="bar-row rv" style="--d:0.28s">
+        <span class="bar-label mono">"bump"</span>
+        <span class="bar-track"><span class="bar-fill" style="width:15.123456790123457%;background:linear-gradient(90deg,#ff6ec4,#ffc36e)"></span></span>
+        <span class="bar-val">×49</span>
+      </div>
+      <div class="bar-row rv" style="--d:0.36s">
+        <span class="bar-label mono">"architecture"</span>
+        <span class="bar-track"><span class="bar-fill" style="width:12.962962962962962%;background:linear-gradient(90deg,#ff6ec4,#ffc36e)"></span></span>
+        <span class="bar-val">×42</span>
+      </div>
+      <div class="bar-row rv" style="--d:0.44s">
+        <span class="bar-label mono">"release"</span>
+        <span class="bar-track"><span class="bar-fill" style="width:12.962962962962962%;background:linear-gradient(90deg,#ff6ec4,#ffc36e)"></span></span>
+        <span class="bar-val">×42</span>
+      </div>
+      <div class="bar-row rv" style="--d:0.52s">
+        <span class="bar-label mono">"hotfix"</span>
+        <span class="bar-track"><span class="bar-fill" style="width:12.962962962962962%;background:linear-gradient(90deg,#ff6ec4,#ffc36e)"></span></span>
+        <span class="bar-val">×42</span>
+      </div></div>
+      <div class="chips"><span class="chip rv" style="--d:.5s">✍️ 12 × “wip”</span><span class="chip rv" style="--d:.56s">🏁 10 × “final”</span><span class="chip rv" style="--d:.62s">🙈 58 × oops/typo</span><span class="chip rv" style="--d:.74s">✨ 41 commits with emoji</span><span class="chip rv" style="--d:.8s">💬 7 commits titled “.”</span></div>
+      <p class="quote rv" style="--d:.85s">Longest commit message ever:<br>“FINAL final v2 (for real this time)”</p>
+    </div></section>
+<section class="slide" data-title="Ghost hours"><div class="inner">
+      <div class="kicker rv" style="--d:.05s">CHAPTER 07 · THE GHOST HOURS</div>
+      
+        <div class="stat-big grad rv" style="--d:.15s" data-cu="308">0</div>
+        <p class="headline-sm rv" style="--d:.3s">commits between midnight and 5am</p>
+        <p class="sub rv" style="--d:.45s">Your most haunted hour: <b>1am</b>. The commit graph never sleeps. Neither do you.</p>
+    </div></section>
+<section class="slide" data-title="The crew"><div class="inner">
+      <div class="kicker rv" style="--d:.05s">CHAPTER 08 · THE CREW</div>
+      <h2 class="rv" style="--d:.15s">It took a <span class="grad">village</span></h2>
+      <div class="bars">
+      <div class="bar-row rv" style="--d:0.25s">
+        <span class="bar-label">🥇 Alex Rivera</span>
+        <span class="bar-track"><span class="bar-fill" style="width:100%;background:linear-gradient(90deg,#4dd8ff,#8a7dff)"></span></span>
+        <span class="bar-val">517 commits</span>
+      </div>
+      <div class="bar-row rv" style="--d:0.37s">
+        <span class="bar-label">🥈 Sam Chen</span>
+        <span class="bar-track"><span class="bar-fill" style="width:58.80077369439072%;background:linear-gradient(90deg,#4dd8ff,#8a7dff)"></span></span>
+        <span class="bar-val">304 commits</span>
+      </div>
+      <div class="bar-row rv" style="--d:0.49s">
+        <span class="bar-label">🥉 Jules Kim</span>
+        <span class="bar-track"><span class="bar-fill" style="width:28.820116054158607%;background:linear-gradient(90deg,#4dd8ff,#8a7dff)"></span></span>
+        <span class="bar-val">149 commits</span>
+      </div></div>
+      <p class="sub rv" style="--d:.7s">3 humans pushed this repo forward. Highlight <b>Alex Rivera</b> at the next standup.</p>
+    </div></section>
+<section class="slide" data-title="Verdict"><div class="inner">
+    <div class="kicker rv" style="--d:.05s">FINAL CHAPTER · THE VERDICT</div>
+    <div class="verdict-card rv" style="--d:.2s">
+      <div class="verdict-emoji">🦉</div>
+      <div class="verdict-title grad">The Midnight Architect</div>
+      <p class="verdict-blurb">42% of your commits shipped after 10pm. The best ideas don't sleep — and apparently, neither do you.</p>
+      <div class="chips">
+        <span class="chip">📦 970 commits</span>
+        <span class="chip">🔥 13-day streak</span>
+        <span class="chip">🌙 42% after 10pm</span>
+      </div>
+    </div>
+  </div></section>
+<section class="slide" data-title="Outro"><div class="inner">
+    <div class="kicker rv" style="--d:.05s">THAT'S A WRAP</div>
+    <h2 class="rv" style="--d:.15s">Your code deserves a<br><span class="grad">standing ovation</span> 👏</h2>
+    <div class="cta rv" style="--d:.35s">
+      <div class="mono">npx git-wrapped</div>
+    </div>
+    <p class="hintline rv" style="--d:.5s">Run it in any repo · Works offline · Nothing leaves your machine</p>
+    <p class="hintline rv" style="--d:.6s">⭐ Star it · 🍴 Fork it · Put <span class="mono">wrapped.svg</span> in your README</p>
+  </div></section></main>
+  <canvas id="confetti"></canvas>
+  <footer class="bottombar">
+    <span class="counter"></span>
+    <div class="dots"></div>
+    <div class="navbtns">
+      <button class="navbtn" id="prv" aria-label="previous">←</button>
+      <button class="navbtn" id="nxt" aria-label="next">→</button>
+    </div>
+  </footer>
+<script>
+  (() => {
+    const slides = [...document.querySelectorAll('.slide')];
+    const dotsBox = document.querySelector('.dots');
+    const counter = document.querySelector('.counter');
+    const progress = document.querySelector('.progress');
+    let idx = 0;
+    slides.forEach((_, i) => {
+      const d = document.createElement('button');
+      d.className = 'dot'; d.setAttribute('aria-label', 'slide ' + (i + 1));
+      d.onclick = () => go(i);
+      dotsBox.appendChild(d);
+    });
+    const dots = [...dotsBox.children];
+    function paint() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+      dots.forEach((d, i) => d.classList.toggle('on', i === idx));
+      counter.textContent = (idx + 1) + ' / ' + slides.length;
+      progress.style.width = ((idx + 1) / slides.length * 100) + '%';
+      runCounters(slides[idx]);
+      if (slides[idx].dataset.title === 'Verdict') confetti();
+    }
+    function go(i) { idx = Math.max(0, Math.min(slides.length - 1, i)); paint(); }
+    const next = () => go(idx + 1), prev = () => go(idx - 1);
+    document.querySelector('#nxt').onclick = next;
+    document.querySelector('#prv').onclick = prev;
+    addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); next(); }
+      if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prev(); }
+      if (e.key === 'Home') go(0);
+      if (e.key === 'End') go(slides.length - 1);
+    });
+    let touchX = null;
+    addEventListener('touchstart', (e) => touchX = e.touches[0].clientX, { passive: true });
+    addEventListener('touchend', (e) => {
+      if (touchX === null) return;
+      const dx = e.changedTouches[0].clientX - touchX;
+      if (Math.abs(dx) > 60) (dx < 0 ? next() : prev());
+      touchX = null;
+    }, { passive: true });
+
+    function runCounters(slide) {
+      slide.querySelectorAll('[data-cu]').forEach((el) => {
+        const target = Number(el.dataset.cu); const t0 = performance.now(); const dur = 1000;
+        const step = (now) => {
+          const p = Math.min(1, (now - t0) / dur);
+          const eased = 1 - Math.pow(1 - p, 3);
+          el.textContent = Math.round(target * eased).toLocaleString('en-US');
+          if (p < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      });
+    }
+
+    /* confetti */
+    const canvas = document.querySelector('#confetti');
+    const ctx = canvas.getContext('2d');
+    const COLORS = ["#ff6ec4","#ffc36e","#8a7dff","#4dd8ff"];
+    function burst() {
+      canvas.width = innerWidth; canvas.height = innerHeight;
+      const parts = [];
+      for (let i = 0; i < 140; i++) parts.push({
+        x: Math.random() * canvas.width, y: -20 - Math.random() * canvas.height * 0.4,
+        w: 6 + Math.random() * 7, h: 9 + Math.random() * 9,
+        vy: 2.4 + Math.random() * 3.4, vx: -1.4 + Math.random() * 2.8,
+        rot: Math.random() * Math.PI, vr: -0.12 + Math.random() * 0.24,
+        c: COLORS[i % COLORS.length],
+      });
+      const t0 = performance.now();
+      (function frame(now) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (const p of parts) {
+          p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+          ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+          ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+        }
+        if (now - t0 < 4200) requestAnimationFrame(frame);
+        else ctx.clearRect(0, 0, canvas.width, canvas.height);
+      })(t0);
+    }
+    let lastConfetti = 0;
+    function confetti() { if (Date.now() - lastConfetti > 5000) { lastConfetti = Date.now(); burst(); } }
+
+    /* save share card as PNG */
+    const CARD = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1200\" height=\"630\" viewBox=\"0 0 1200 630\" role=\"img\" aria-label=\"git-wrapped card for demo-repo\">\n  <defs>\n    <radialGradient id=\"blob1\" cx=\"50%\" cy=\"50%\" r=\"50%\">\n      <stop offset=\"0%\" stop-color=\"#7c3aed\" stop-opacity=\"0.55\"/>\n      <stop offset=\"100%\" stop-color=\"#7c3aed\" stop-opacity=\"0\"/>\n    </radialGradient>\n    <radialGradient id=\"blob2\" cx=\"50%\" cy=\"50%\" r=\"50%\">\n      <stop offset=\"0%\" stop-color=\"#2563eb\" stop-opacity=\"0.45\"/>\n      <stop offset=\"100%\" stop-color=\"#2563eb\" stop-opacity=\"0\"/>\n    </radialGradient>\n    <linearGradient id=\"titleGrad\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\">\n      <stop offset=\"0%\" stop-color=\"#ff6ec4\"/>\n      <stop offset=\"100%\" stop-color=\"#ffc36e\"/>\n    </linearGradient>\n    <linearGradient id=\"verdictGrad\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"0%\">\n      <stop offset=\"0%\" stop-color=\"#ff6ec4\" stop-opacity=\"0.22\"/>\n      <stop offset=\"100%\" stop-color=\"#4dd8ff\" stop-opacity=\"0.22\"/>\n    </linearGradient>\n  </defs>\n\n  <rect width=\"1200\" height=\"630\" fill=\"#0a0a16\"/>\n  <circle cx=\"130\" cy=\"40\" r=\"330\" fill=\"url(#blob1)\"/>\n  <circle cx=\"1120\" cy=\"620\" r=\"380\" fill=\"url(#blob2)\"/>\n\n  <text x=\"64\" y=\"76\" font-family=\"system-ui,-apple-system,'Segoe UI',Roboto,sans-serif\" font-size=\"22\" font-weight=\"800\" fill=\"#ffffff\">git<tspan fill=\"url(#titleGrad)\">-wrapped</tspan></text>\n  <text x=\"1136\" y=\"76\" text-anchor=\"end\" font-family=\"system-ui,-apple-system,'Segoe UI',Roboto,sans-serif\" font-size=\"15\" font-weight=\"600\" fill=\"rgba(255,255,255,0.38)\">Sep 2024 – Jul 2026</text>\n\n  <text x=\"64\" y=\"150\" font-family=\"system-ui,-apple-system,'Segoe UI',Roboto,sans-serif\" font-size=\"42\" font-weight=\"800\" fill=\"#ffffff\">demo-repo</text>\n\n  \n  <g>\n    <rect x=\"72\" y=\"188\" width=\"246\" height=\"128\" rx=\"18\" fill=\"rgba(255,255,255,0.055)\" stroke=\"rgba(255,255,255,0.12)\" stroke-width=\"1.5\"/>\n    <text x=\"92\" y=\"222\" font-family=\"system-ui,-apple-system,'Segoe UI',Roboto,sans-serif\" font-size=\"12\" letter-spacing=\"2.5\" font-weight=\"700\" fill=\"rgba(255,255,255,0.38)\">COMMITS</text>\n    <text x=\"92\" y=\"278\" font-family=\"system-ui,-apple-system,'Segoe UI',Roboto,sans-serif\" font-size=\"40\" font-weight=\"800\" fill=\"#ff6ec4\">970</text>\n    \n  </g>\n  <g>\n    <rect x=\"342\" y=\"188\" width=\"246\" height=\"128\" rx=\"18\" fill=\"rgba(255,255,255,0.055)\" stroke=\"rgba(255,255,255,0.12)\" stroke-width=\"1.5\"/>\n    <text x=\"362\" y=\"222\" font-family=\"system-ui,-apple-system,'Segoe UI',Roboto,sans-serif\" font-size=\"12\" letter-spacing=\"2.5\" font-weight=\"700\" fill=\"rgba(255,255,255,0.38)\">TOP LANGUAGE</text>\n    <text x=\"362\" y=\"278\" font-family=\"system-ui,-apple-system,'Segoe UI',Roboto,sans-serif\" font-size=\"30\" font-weight=\"800\" fill=\"#8a7dff\">TypeScript</text>\n    <text x=\"362\" y=\"302\" font-family=\"system-ui,-apple-system,'Segoe UI',Roboto,sans-serif\" font-size=\"13\" fill=\"rgba(255,255,255,0.38)\">48% of code written</text>\n  </g>\n  <g>\n    <rect x=\"612\" y=\"188\" width=\"246\" height=\"128\" rx=\"18\" fill=\"rgba(255,255,255,0.055)\" stroke=\"rgba(255,255,255,0.12)\" stroke-width=\"1.5\"/>\n    <text x=\"632\" y=\"222\" font-family=\"system-ui,-apple-system,'Segoe UI',Roboto,sans-serif\" font-size=\"12\" letter-spacing=\"2.5\" font-weight=\"700\" fill=\"rgba(255,255,255,0.38)\">LONGEST STREAK</text>\n    <text x=\"632\" y=\"278\" font-family=\"system-ui,-apple-system,'Segoe UI',Roboto,sans-serif\" font-size=\"40\" font-weight=\"800\" fill=\"#ffc36e\">13d</text>\n    \n  </g>\n  <g>\n    <rect x=\"882\" y=\"188\" width=\"246\" height=\"128\" rx=\"18\" fill=\"rgba(255,255,255,0.055)\" stroke=\"rgba(255,255,255,0.12)\" stroke-width=\"1.5\"/>\n    <text x=\"902\" y=\"222\" font-family=\"system-ui,-apple-system,'Segoe UI',Roboto,sans-serif\" font-size=\"12\" letter-spacing=\"2.5\" font-weight=\"700\" fill=\"rgba(255,255,255,0.38)\">3AM COMMITS</text>\n    <text x=\"902\" y=\"278\" font-family=\"system-ui,-apple-system,'Segoe UI',Roboto,sans-serif\" font-size=\"40\" font-weight=\"800\" fill=\"#4dd8ff\">308</text>\n    \n  </g>\n\n  <g>\n    <rect x=\"64\" y=\"348\" width=\"1072\" height=\"180\" rx=\"22\" fill=\"url(#verdictGrad)\" stroke=\"rgba(255,255,255,0.12)\" stroke-width=\"1.5\"/>\n    <text x=\"96\" y=\"396\" font-family=\"system-ui,-apple-system,'Segoe UI',Roboto,sans-serif\" font-size=\"13\" letter-spacing=\"3\" font-weight=\"700\" fill=\"rgba(255,255,255,0.38)\">YOUR CODING PERSONALITY</text>\n    <text x=\"96\" y=\"452\" font-family=\"system-ui,-apple-system,'Segoe UI',Roboto,sans-serif\" font-size=\"44\" font-weight=\"800\" fill=\"#ffffff\">🦉  The Midnight Architect</text>\n    <text x=\"96\" y=\"496\" font-family=\"system-ui,-apple-system,'Segoe UI',Roboto,sans-serif\" font-size=\"16\" fill=\"rgba(255,255,255,0.62)\">42% of your commits shipped after 10pm. The best ideas don't sleep — and apparently, neither do you.</text>\n  </g>\n\n  <text x=\"64\" y=\"580\" font-family=\"system-ui,-apple-system,'Segoe UI',Roboto,sans-serif\" font-size=\"15\" font-weight=\"700\" fill=\"rgba(255,255,255,0.38)\">make yours → <tspan fill=\"#ff6ec4\">npx git-wrapped</tspan></text>\n</svg>\n";
+    document.querySelector('#save').onclick = async () => {
+      const blob = new Blob([CARD], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement('canvas');
+        c.width = 2400; c.height = 1260;
+        const cx = c.getContext('2d');
+        cx.drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        c.toBlob((b) => {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(b);
+          a.download = 'git-wrapped-card.png';
+          a.click();
+        }, 'image/png');
+      };
+      img.src = url;
+    };
+
+    paint();
+  })();</script>
+</body>
+</html>

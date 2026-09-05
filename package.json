@@ -1,0 +1,42 @@
+{
+  "name": "git-wrapped",
+  "version": "1.0.0",
+  "description": "Spotify Wrapped for your git history — a local, zero-dependency, animated story of your code. Terminal card + shareable SVG, no upload, no API key.",
+  "type": "module",
+  "bin": {
+    "git-wrapped": "bin/git-wrapped.js"
+  },
+  "main": "src/cli.js",
+  "files": [
+    "bin",
+    "src"
+  ],
+  "engines": {
+    "node": ">=16"
+  },
+  "keywords": [
+    "git",
+    "wrapped",
+    "spotify-wrapped",
+    "git-stats",
+    "gitinsights",
+    "year-in-review",
+    "developer-tools",
+    "cli",
+    "terminal",
+    "open-source"
+  ],
+  "author": "sutharsan (https://github.com/sutharsan-311)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sutharsan-311/git-wrapped.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sutharsan-311/git-wrapped/issues"
+  },
+  "homepage": "https://github.com/sutharsan-311/git-wrapped#readme",
+  "scripts": {
+    "test": "node test.mjs"
+  }
+}

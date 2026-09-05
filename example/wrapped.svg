@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="git-wrapped card for demo-repo">
+  <defs>
+    <radialGradient id="blob1" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="blob2" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#2563eb" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#2563eb" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="titleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff6ec4"/>
+      <stop offset="100%" stop-color="#ffc36e"/>
+    </linearGradient>
+    <linearGradient id="verdictGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ff6ec4" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#4dd8ff" stop-opacity="0.22"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="#0a0a16"/>
+  <circle cx="130" cy="40" r="330" fill="url(#blob1)"/>
+  <circle cx="1120" cy="620" r="380" fill="url(#blob2)"/>
+
+  <text x="64" y="76" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="22" font-weight="800" fill="#ffffff">git<tspan fill="url(#titleGrad)">-wrapped</tspan></text>
+  <text x="1136" y="76" text-anchor="end" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="15" font-weight="600" fill="rgba(255,255,255,0.38)">2024 – 2026</text>
+
+  <text x="64" y="150" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="42" font-weight="800" fill="#ffffff">demo-repo</text>
+
+  
+  <g>
+    <rect x="72" y="188" width="246" height="128" rx="18" fill="rgba(255,255,255,0.055)" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+    <text x="92" y="222" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="12" letter-spacing="2.5" font-weight="700" fill="rgba(255,255,255,0.38)">COMMITS</text>
+    <text x="92" y="278" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="40" font-weight="800" fill="#ff6ec4">970</text>
+    
+  </g>
+  <g>
+    <rect x="342" y="188" width="246" height="128" rx="18" fill="rgba(255,255,255,0.055)" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+    <text x="362" y="222" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="12" letter-spacing="2.5" font-weight="700" fill="rgba(255,255,255,0.38)">TOP LANGUAGE</text>
+    <text x="362" y="278" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="30" font-weight="800" fill="#8a7dff">TypeScript</text>
+    <text x="362" y="302" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="13" fill="rgba(255,255,255,0.38)">48% of code written</text>
+  </g>
+  <g>
+    <rect x="612" y="188" width="246" height="128" rx="18" fill="rgba(255,255,255,0.055)" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+    <text x="632" y="222" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="12" letter-spacing="2.5" font-weight="700" fill="rgba(255,255,255,0.38)">LONGEST STREAK</text>
+    <text x="632" y="278" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="40" font-weight="800" fill="#ffc36e">13d</text>
+    
+  </g>
+  <g>
+    <rect x="882" y="188" width="246" height="128" rx="18" fill="rgba(255,255,255,0.055)" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+    <text x="902" y="222" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="12" letter-spacing="2.5" font-weight="700" fill="rgba(255,255,255,0.38)">3AM COMMITS</text>
+    <text x="902" y="278" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="40" font-weight="800" fill="#4dd8ff">308</text>
+    
+  </g>
+
+  <g>
+    <rect x="64" y="348" width="1072" height="180" rx="22" fill="url(#verdictGrad)" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+    <text x="96" y="396" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="13" letter-spacing="3" font-weight="700" fill="rgba(255,255,255,0.38)">YOUR CODING PERSONALITY</text>
+    <text x="96" y="452" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="44" font-weight="800" fill="#ffffff">🦉  The Midnight Architect</text>
+    <text x="96" y="496" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="16" fill="rgba(255,255,255,0.62)">42% of your commits shipped after 10pm. The best ideas don't sleep — and apparently, neither do you.</text>
+  </g>
+
+  <text x="64" y="580" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="15" font-weight="700" fill="rgba(255,255,255,0.38)">make yours → <tspan fill="#ff6ec4">npx git-wrapped</tspan></text>
+</svg>

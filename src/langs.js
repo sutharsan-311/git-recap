@@ -1,0 +1,90 @@
+// Extension -> display name + brand color. Anything unknown falls into "Other".
+const LANGS = {
+  js: ['JavaScript', '#f7df1e'],
+  mjs: ['JavaScript', '#f7df1e'],
+  cjs: ['JavaScript', '#f7df1e'],
+  jsx: ['JSX', '#61dafb'],
+  ts: ['TypeScript', '#3178c6'],
+  tsx: ['TypeScript', '#41b0ff'],
+  py: ['Python', '#3776ab'],
+  pyw: ['Python', '#3776ab'],
+  ipynb: ['Jupyter', '#f37626'],
+  go: ['Go', '#00add8'],
+  rs: ['Rust', '#dea584'],
+  java: ['Java', '#e76f00'],
+  kt: ['Kotlin', '#a97bff'],
+  kts: ['Kotlin', '#a97bff'],
+  rb: ['Ruby', '#cc342d'],
+  php: ['PHP', '#777bb4'],
+  cs: ['C#', '#68217a'],
+  c: ['C', '#555555'],
+  h: ['C', '#555555'],
+  cpp: ['C++', '#f34b7d'],
+  cc: ['C++', '#f34b7d'],
+  cxx: ['C++', '#f34b7d'],
+  hpp: ['C++', '#f34b7d'],
+  m: ['Objective-C', '#438eff'],
+  mm: ['Objective-C', '#438eff'],
+  swift: ['Swift', '#f05138'],
+  scala: ['Scala', '#c22d40'],
+  dart: ['Dart', '#00b4ab'],
+  lua: ['Lua', '#000080'],
+  ex: ['Elixir', '#6e4a7e'],
+  exs: ['Elixir', '#6e4a7e'],
+  erl: ['Erlang', '#b83983'],
+  hs: ['Haskell', '#5e5086'],
+  ml: ['OCaml', '#ef7a08'],
+  clj: ['Clojure', '#db5855'],
+  elm: ['Elm', '#60b5cc'],
+  r: ['R', '#276dc3'],
+  jl: ['Julia', '#a270ba'],
+  pl: ['Perl', '#39457e'],
+  sh: ['Shell', '#89e051'],
+  bash: ['Shell', '#89e051'],
+  zsh: ['Shell', '#89e051'],
+  fish: ['Shell', '#89e051'],
+  ps1: ['PowerShell', '#012456'],
+  vue: ['Vue', '#41b883'],
+  svelte: ['Svelte', '#ff3e00'],
+  astro: ['Astro', '#ff5d01'],
+  html: ['HTML', '#e34c26'],
+  htm: ['HTML', '#e34c26'],
+  css: ['CSS', '#563d7c'],
+  scss: ['SCSS', '#c6538c'],
+  sass: ['Sass', '#cc6699'],
+  less: ['Less', '#1d365d'],
+  md: ['Markdown', '#8da0c7'],
+  mdx: ['MDX', '#fcb32c'],
+  json: ['JSON', '#cbcb41'],
+  jsonc: ['JSON', '#cbcb41'],
+  yaml: ['YAML', '#cb171e'],
+  yml: ['YAML', '#cb171e'],
+  toml: ['TOML', '#9c4221'],
+  xml: ['XML', '#0060ac'],
+  sql: ['SQL', '#e38c00'],
+  graphql: ['GraphQL', '#e10098'],
+  gql: ['GraphQL', '#e10098'],
+  sol: ['Solidity', '#8c8c8c'],
+  tf: ['Terraform', '#7b42bc'],
+  proto: ['Protobuf', '#4a88c7'],
+  vim: ['Vim Script', '#199f4b'],
+  zig: ['Zig', '#f7a41d'],
+  nim: ['Nim', '#ffe953'],
+  groovy: ['Groovy', '#4298b8'],
+  tex: ['TeX', '#3d6117'],
+  txt: ['Text', '#9aa4b2'],
+};
+
+export function extOf(path) {
+  const base = path.split('/').pop() || path;
+  const i = base.lastIndexOf('.');
+  if (i <= 0) return null;
+  return base.slice(i + 1).toLowerCase();
+}
+
+export function langOf(path) {
+  const ext = extOf(path);
+  if (!ext) return null;
+  const hit = LANGS[ext];
+  return hit ? { name: hit[0], color: hit[1] } : null;
+}
