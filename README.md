@@ -128,7 +128,7 @@ If this made you smile, [star the repo](../../stargazers) — it's the only metr
 
 ## Contributing
 
-PRs welcome — verdicts, themes, and languages are all data-driven tables, so adding one is a great first issue. See [docs/MONETIZATION.md](docs/MONETIZATION.md) if you want to build the pro tier with me.
+PRs welcome — verdicts, themes, and languages are all data-driven tables, so adding one is a great first issue.
 
 ## License
 

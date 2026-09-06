@@ -7,3 +7,6 @@ demo-repo/
 
 # Machine-local Claude Code settings
 .claude/settings.local.json
+
+# Local strategy notes, not for publication
+docs/MONETIZATION.md
