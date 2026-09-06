@@ -1,12 +1,13 @@
 // Deterministic personality engine: pick the verdict the repo is most *unusual* on.
 //
+import { utcDay } from './git.js';
+
 // Every candidate scores as (this repo's rate) / (a typical repo's rate), so the
 // signals are comparable to each other — a 60%-night repo (4x typical) beats a
 // 30%-weekend repo (2x typical), and nothing wins just for having a big raw number.
 // All seven values are shares bounded by 1.0. Anything at or below 1.0 is ordinary
 // and doesn't get to be your personality.
 //
-import { utcDay } from './git.js';
 // ponytail: baselines below are hand-set priors, not measured. If someone ever
 // runs this over a corpus of real repos, replace them with the actual medians.
 const TYPICAL = {
@@ -46,13 +47,17 @@ export function pickVerdict(s) {
     ? utcDay(s.lastCommit.date) - utcDay(s.firstCommit.date) + 1
     : 0;
   const cands = [];
-  const add = (key, value, title, emoji, blurb) => {
-    // A rate estimated from too few commits is noise: 2 night commits out of 10
-    // is not a personality. A signal may only win when its baseline predicts
-    // ~5 events across the repo (total * baseline >= 5); smaller repos fall
-    // through to the fallback instead of getting a verdict from noise.
+  // A rate estimated from too few observations is noise: 2 night commits out of
+  // 10 is not a personality. A signal may only win when its baseline predicts
+  // ~5 events (n * baseline >= 5); below that we fall through to the fallback.
+  // `n` is the sample the rate was measured over, and it is NOT always the
+  // commit count: six baselines are shares of commits, but streak's is a share
+  // of days, so it passes the span. Multiplying a per-day baseline by a commit
+  // count is the same unit mix the streak score itself was just fixed for, and
+  // it put the Marathoner cutoff at an arbitrary 5/0.03 = 167 commits.
+  const add = (key, value, title, emoji, blurb, n = s.total) => {
     const score = value / TYPICAL[key];
-    if (s.total * TYPICAL[key] >= 5 && score > 1) cands.push({ key, score, title, emoji, blurb });
+    if (n * TYPICAL[key] >= 5 && score > 1) cands.push({ key, score, title, emoji, blurb });
   };
 
   add('night', s.nightPct / 100, 'The Midnight Architect', '🦉',
@@ -68,7 +73,7 @@ export function pickVerdict(s) {
   add('wip', s.lingo.wip / Math.max(s.total, 1), 'The Eternal Draft', '✍️',
     `${s.lingo.wip} commits literally titled “wip”. Somewhere, a future you is screaming — lovingly.`);
   add('streak', span ? s.longestStreak / span : 0, 'The Marathoner', '🏃',
-    `${s.longestStreak} consecutive days of commits. Momentum isn't a habit for you — it's a personality.`);
+    `${s.longestStreak} consecutive days of commits. Momentum isn't a habit for you — it's a personality.`, span);
 
   cands.sort((a, b) => b.score - a.score);
   if (cands[0]) return { ...cands[0], score: undefined };

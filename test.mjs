@@ -54,6 +54,27 @@ assert.equal(pickVerdict(ordinary({ nightPct: 30, lingo: { wip: 40, fix: 100, do
     'a 60-day streak in a 3-year-old repo must not beat a 4x behavioural signal');
 }
 
+// 3b. Streak's sample size is DAYS, not commits. The small-sample gate below
+//     multiplies a baseline by the sample it was measured over; feeding it the
+//     commit count works for the six share-of-commits signals but not for this
+//     one, and put the Marathoner cutoff at an arbitrary 5/0.03 = 167 commits
+//     — the same unit mix the streak score itself was just fixed for.
+{
+  // A repo committed to sparsely but relentlessly: 200 of its 730 days in one
+  // run is 27% of its life, 9x baseline. It earns Marathoner on 80 commits.
+  assert.equal(pickVerdict(ordinary({
+    total: 80, longestStreak: 200,
+    firstCommit: { date: '2023-01-01' }, lastCommit: { date: '2024-12-31' },
+  })).key, 'streak', 'a marathon streak must not need 167 commits to count');
+
+  // The mirror of the original bug: over a 12-day span the share is trivially
+  // 1.0, so a fortnight-old repo must not out-marathon a three-year one.
+  assert.notEqual(pickVerdict(ordinary({
+    total: 200, longestStreak: 12,
+    firstCommit: { date: '2024-01-01' }, lastCommit: { date: '2024-01-12' },
+  })).key, 'streak', '12 days is too short a life to have a streak share at all');
+}
+
 // 4. Too few commits to say anything: no behavioural verdict, no solo claim.
 assert.equal(pickVerdict(ordinary({ total: 5, nightPct: 90 })).key, 'force');
 
