@@ -1,4 +1,4 @@
-// The shareable 1200x630 digest card. Used for wrapped.svg (README embed / social
+// The shareable 1200x630 digest card. Used for recap.svg (README embed / social
 // preview) and re-used inside the HTML deck for the "Save PNG" button.
 const esc = (s) =>
   String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -51,7 +51,7 @@ export function buildCardSvg(s, theme, { repo, range } = {}) {
     })
     .join('');
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="git-wrapped card for ${esc(repo || 'repository')}">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="git-recap card for ${esc(repo || 'repository')}">
   <defs>
     <style>
       /* mid-cycle keyframes only -- see ANIM above */
@@ -90,7 +90,7 @@ export function buildCardSvg(s, theme, { repo, range } = {}) {
   <circle class="blob blob1" cx="130" cy="40" r="330" fill="url(#blob1)"/>
   <circle class="blob blob2" cx="1120" cy="620" r="380" fill="url(#blob2)"/>
 
-  <text x="64" y="76" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="22" font-weight="800" fill="${theme.text}">git<tspan fill="url(#titleGrad)">-wrapped</tspan></text>
+  <text x="64" y="76" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="22" font-weight="800" fill="${theme.text}">git<tspan fill="url(#titleGrad)">-recap</tspan></text>
   <text x="1136" y="76" text-anchor="end" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="15" font-weight="600" fill="${theme.faint}">${esc(range || '')}</text>
 
   <text x="64" y="150" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="42" font-weight="800" fill="${theme.text}">${esc(repo || 'your repository')}</text>
@@ -104,7 +104,7 @@ export function buildCardSvg(s, theme, { repo, range } = {}) {
     <text x="96" y="496" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="16" fill="${theme.muted}">${esc(verdict.blurb).slice(0, 110)}</text>
   </g>
 
-  <text x="64" y="580" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="15" font-weight="700" fill="${theme.faint}">make yours → <tspan fill="${theme.a1}">npx git-wrapped</tspan></text>
+  <text x="64" y="580" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="15" font-weight="700" fill="${theme.faint}">make yours → <tspan fill="${theme.a1}">npx git-recap</tspan></text>
 </svg>
 `;
 }

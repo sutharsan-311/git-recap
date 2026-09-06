@@ -9,7 +9,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-const deck = path.resolve(process.argv[2] || 'example/wrapped.html');
+const deck = path.resolve(process.argv[2] || 'example/recap.html');
 const outDir = path.resolve(process.argv[3] || 'docs/screenshots');
 
 // Output name -> the slide's data-title. Keyed on TITLE, not index: the languages,
@@ -121,14 +121,14 @@ function shoot(chrome, htmlFile, pngFile) {
 }
 
 if (!fs.existsSync(deck)) {
-  console.error(`  ✖ ${deck} not found. Generate a deck first:\n\n      node bin/git-wrapped.js demo-repo --no-open --out example\n`);
+  console.error(`  ✖ ${deck} not found. Generate a deck first:\n\n      node bin/git-recap.js demo-repo --no-open --out example\n`);
   process.exit(1);
 }
 
 const chrome = findChrome();
 const html = fs.readFileSync(deck, 'utf8');
 const titles = [...html.matchAll(/data-title="([^"]*)"/g)].map((m) => m[1]);
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'git-wrapped-shots-'));
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'git-recap-shots-'));
 fs.mkdirSync(outDir, { recursive: true });
 
 let failed = 0;

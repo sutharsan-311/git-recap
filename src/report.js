@@ -357,10 +357,10 @@ function buildSlides(s, t, meta) {
     <div class="kicker rv" style="--d:.05s">THAT'S A WRAP</div>
     <h2 class="rv" style="--d:.15s">Your code deserves a<br><span class="grad">standing ovation</span> 👏</h2>
     <div class="cta rv" style="--d:.35s">
-      <div class="mono">npx git-wrapped</div>
+      <div class="mono">npx git-recap</div>
     </div>
     <p class="hintline rv" style="--d:.5s">Run it in any repo · Works offline · Nothing leaves your machine</p>
-    <p class="hintline rv" style="--d:.6s">⭐ Star it · 🍴 Fork it · Put <span class="mono">wrapped.svg</span> in your README</p>
+    <p class="hintline rv" style="--d:.6s">⭐ Star it · 🍴 Fork it · Put <span class="mono">recap.svg</span> in your README</p>
   `, { title: 'Outro' }));
 
   return slides;
@@ -581,7 +581,7 @@ function pageJs(t, cardSvg, seed) {
         c.toBlob((b) => {
           const a = document.createElement('a');
           a.href = URL.createObjectURL(b);
-          a.download = 'git-wrapped-card.png';
+          a.download = 'git-recap-card.png';
           a.click();
         }, 'image/png');
       };
@@ -600,14 +600,14 @@ export function buildHtml(s, theme, meta) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${esc(meta.repo)} — git-wrapped</title>
-<meta name="description" content="Spotify Wrapped for your git history. Generated locally by git-wrapped.">
+<title>${esc(meta.repo)} — git-recap</title>
+<meta name="description" content="Spotify Wrapped for your git history. Generated locally by git-recap.">
 <style>${css(theme)}</style>
 </head>
 <body>
   <div class="progress"></div>
   <header class="topbar">
-    <span class="wordmark">git<span class="grad">-wrapped</span></span>
+    <span class="wordmark">git<span class="grad">-recap</span></span>
     <div class="actions">
       <button class="btn" id="save">⬇ Save share card</button>
       <button class="btn" onclick="location.reload()">↻ Replay</button>

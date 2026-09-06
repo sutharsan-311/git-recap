@@ -258,10 +258,10 @@ for (const [key, signal] of Object.entries(only)) {
 // xdg-open handed it a path it could not read: the browser cold-started, found
 // nothing, wedged, and then swallowed every later open with no error anywhere.
 {
-  for (const p of ['/tmp/x/wrapped.html', '/var/tmp/wrapped.html', '/tmp', '/home/u/.cache/w/wrapped.html', '/home/u/proj/.next/wrapped.html']) {
+  for (const p of ['/tmp/x/recap.html', '/var/tmp/recap.html', '/tmp', '/home/u/.cache/w/recap.html', '/home/u/proj/.next/recap.html']) {
     assert.equal(sandboxUnreadable(p), true, `${p} is not readable by a confined browser`);
   }
-  for (const p of ['/home/u/proj/git-wrapped/wrapped.html', '/home/u/Desktop/w/wrapped.html', '/srv/code/wrapped.html', '/home/u/tmp/wrapped.html']) {
+  for (const p of ['/home/u/proj/git-recap/recap.html', '/home/u/Desktop/w/recap.html', '/srv/code/recap.html', '/home/u/tmp/recap.html']) {
     assert.equal(sandboxUnreadable(p), false, `${p} is fine and must not warn`);
   }
 }
@@ -307,8 +307,8 @@ for (const [key, signal] of Object.entries(only)) {
 // encodes all of it. (The drive-letter form file:///C:/... itself can only be
 // exercised on a Windows runner; the encoding bugs below reproduce everywhere.)
 {
-  assert.equal(fileUrl('/home/u/my repo/wrapped.html'), 'file:///home/u/my%20repo/wrapped.html');
-  assert.equal(fileUrl('/home/üser/wrapped.html'), 'file:///home/%C3%BCser/wrapped.html');
+  assert.equal(fileUrl('/home/u/my repo/recap.html'), 'file:///home/u/my%20repo/recap.html');
+  assert.equal(fileUrl('/home/üser/recap.html'), 'file:///home/%C3%BCser/recap.html');
   assert.equal(fileUrl('/w/r#1.html'), 'file:///w/r%231.html', 'a raw # silently truncates the URL at the fragment');
 }
 

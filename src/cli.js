@@ -13,10 +13,10 @@ import { buildCardSvg } from './card.js';
 const VERSION = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
 
 const HELP = `
-  git-wrapped · Spotify Wrapped for your git history
+  git-recap · Spotify Wrapped for your git history
 
   USAGE
-    npx git-wrapped [repo-path] [options]
+    npx git-recap [repo-path] [options]
 
   OPTIONS
     --year <yyyy>     limit to a calendar year (e.g. --year 2025)
@@ -24,16 +24,16 @@ const HELP = `
     --until <date>    git date filter, passed through
     --author <name>   only commits matching this author
     --theme <name>    night (default) · synth · forest
-    --out <dir>       output directory (default: <repo>/git-wrapped/)
+    --out <dir>       output directory (default: <repo>/git-recap/)
     --no-open         don't open the story in your browser
     --json            print the stats JSON to stdout instead of writing files
     -h, --help        show this help
     -v, --version     show version
 
-  OUTPUT (written to ./git-wrapped/)
-    wrapped.html   the animated story (open it, arrow keys to navigate)
-    wrapped.svg    share card for your README / social preview
-    wrapped.json   the raw stats, for the data nerds
+  OUTPUT (written to ./git-recap/)
+    recap.html   the animated story (open it, arrow keys to navigate)
+    recap.svg    share card for your README / social preview
+    recap.json   the raw stats, for the data nerds
 `;
 
 /* ---------- tiny ANSI helpers (zero deps) ---------- */
@@ -140,7 +140,7 @@ export function main(argv) {
   }
   const repo = path.resolve(opts.repo);
   if (!fs.existsSync(path.join(repo, '.git'))) {
-    console.error(`\n  ✖ ${repo} is not a git repository.\n\n  cd into a repo and run ${BOLD('npx git-wrapped')}\n`);
+    console.error(`\n  ✖ ${repo} is not a git repository.\n\n  cd into a repo and run ${BOLD('npx git-recap')}\n`);
     process.exit(1);
   }
   if (opts.year) {
@@ -180,12 +180,12 @@ export function main(argv) {
     return;
   }
 
-  const outDir = path.resolve(opts.out || path.join(repo, 'git-wrapped'));
+  const outDir = path.resolve(opts.out || path.join(repo, 'git-recap'));
   fs.mkdirSync(outDir, { recursive: true });
 
-  const htmlPath = path.join(outDir, 'wrapped.html');
-  const svgPath = path.join(outDir, 'wrapped.svg');
-  const jsonPath = path.join(outDir, 'wrapped.json');
+  const htmlPath = path.join(outDir, 'recap.html');
+  const svgPath = path.join(outDir, 'recap.svg');
+  const jsonPath = path.join(outDir, 'recap.json');
 
   fs.writeFileSync(htmlPath, buildHtml(s, theme, { repo: s.repo, year: opts.year, theme: theme.id, generatedAt: new Date().toISOString(), version: VERSION }));
   fs.writeFileSync(svgPath, buildCardSvg(s, theme, { repo: s.repo, range }));

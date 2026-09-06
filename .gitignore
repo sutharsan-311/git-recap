@@ -1,7 +1,7 @@
 # Dependencies are intentionally zero. Do not add any.
 node_modules/
 demo-repo/
-*/git-wrapped/
+*/git-recap/
 *.log
 .DS_Store
 

@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="git-wrapped card for demo-repo">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="git-recap card for demo-repo">
   <defs>
     <style>
       /* mid-cycle keyframes only -- see ANIM above */
@@ -37,7 +37,7 @@
   <circle class="blob blob1" cx="130" cy="40" r="330" fill="url(#blob1)"/>
   <circle class="blob blob2" cx="1120" cy="620" r="380" fill="url(#blob2)"/>
 
-  <text x="64" y="76" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="22" font-weight="800" fill="#ffffff">git<tspan fill="url(#titleGrad)">-wrapped</tspan></text>
+  <text x="64" y="76" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="22" font-weight="800" fill="#ffffff">git<tspan fill="url(#titleGrad)">-recap</tspan></text>
   <text x="1136" y="76" text-anchor="end" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="15" font-weight="600" fill="rgba(255,255,255,0.38)">2024 – 2026</text>
 
   <text x="64" y="150" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="42" font-weight="800" fill="#ffffff">demo-repo</text>
@@ -75,5 +75,5 @@
     <text x="96" y="496" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="16" fill="rgba(255,255,255,0.62)">42% of your commits shipped after 10pm. The best ideas don't sleep — and apparently, neither do you.</text>
   </g>
 
-  <text x="64" y="580" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="15" font-weight="700" fill="rgba(255,255,255,0.38)">make yours → <tspan fill="#ff6ec4">npx git-wrapped</tspan></text>
+  <text x="64" y="580" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="15" font-weight="700" fill="rgba(255,255,255,0.38)">make yours → <tspan fill="#ff6ec4">npx git-recap</tspan></text>
 </svg>
