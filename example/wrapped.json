@@ -1,7 +1,6 @@
 {
   "repo": "demo-repo",
   "total": 970,
-  "merges": 0,
   "ins": 1045,
   "del": 0,
   "activeDays": 441,
@@ -633,19 +632,19 @@
       "n": 324
     },
     {
+      "word": "update",
+      "n": 135
+    },
+    {
+      "word": "add",
+      "n": 51
+    },
+    {
       "word": "bump",
       "n": 49
     },
     {
       "word": "architecture",
-      "n": 42
-    },
-    {
-      "word": "release",
-      "n": 42
-    },
-    {
-      "word": "hotfix",
       "n": 42
     }
   ],
