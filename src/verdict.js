@@ -3,8 +3,10 @@
 // Every candidate scores as (this repo's rate) / (a typical repo's rate), so the
 // signals are comparable to each other — a 60%-night repo (4x typical) beats a
 // 30%-weekend repo (2x typical), and nothing wins just for having a big raw number.
-// Anything at or below 1.0 is ordinary and doesn't get to be your personality.
+// All seven values are shares bounded by 1.0. Anything at or below 1.0 is ordinary
+// and doesn't get to be your personality.
 //
+import { utcDay } from './git.js';
 // ponytail: baselines below are hand-set priors, not measured. If someone ever
 // runs this over a corpus of real repos, replace them with the actual medians.
 const TYPICAL = {
@@ -14,7 +16,9 @@ const TYPICAL = {
   fix: 0.20,     // share of subjects starting with "fix"
   docs: 0.06,    // share starting with "docs"
   wip: 0.02,     // share starting with "wip"
-  streak: 7,     // longest run of consecutive committing days
+  streak: 0.03,  // share of the repo's committed lifespan covered by its longest
+                 // daily streak. Development is bursty — a week or two of daily
+                 // pushes, then quiet stretches — so a few percent is typical.
 };
 
 const FALLBACK = {
@@ -33,6 +37,14 @@ const FALLBACK = {
 };
 
 export function pickVerdict(s) {
+  // Streak is scored as a share of the repo's committed lifespan — the same
+  // bounded 0..1 shape as the other signals. A raw day count grows with repo
+  // age, so old steady repos used to win Marathoner forever; as a share, age
+  // cancels out and only a streak covering an unusual slice of the repo's life
+  // qualifies.
+  const span = s.firstCommit && s.lastCommit
+    ? utcDay(s.lastCommit.date) - utcDay(s.firstCommit.date) + 1
+    : 0;
   const cands = [];
   const add = (key, value, title, emoji, blurb) => {
     const score = value / TYPICAL[key];
@@ -51,7 +63,7 @@ export function pickVerdict(s) {
     `${s.lingo.docs} documentation commits. Code fades, but the docs you wrote will guide strangers for years.`);
   add('wip', s.lingo.wip / Math.max(s.total, 1), 'The Eternal Draft', '✍️',
     `${s.lingo.wip} commits literally titled “wip”. Somewhere, a future you is screaming — lovingly.`);
-  add('streak', s.longestStreak, 'The Marathoner', '🏃',
+  add('streak', span ? s.longestStreak / span : 0, 'The Marathoner', '🏃',
     `${s.longestStreak} consecutive days of commits. Momentum isn't a habit for you — it's a personality.`);
 
   cands.sort((a, b) => b.score - a.score);

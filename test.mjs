@@ -13,6 +13,8 @@ const ordinary = (over = {}) => ({
   total: 500,
   nightPct: 15, earlyPct: 12, weekendPct: 15, fixPct: 20, docsPct: 6,
   longestStreak: 7,
+  firstCommit: { date: '2025-01-01' },
+  lastCommit: { date: '2025-12-31' },
   lingo: { wip: 10, fix: 100, docs: 30 }, // 10/500 = 2% = baseline
   authors: [{ name: 'solo' }],
   ...over,
@@ -35,6 +37,22 @@ assert.equal(mixed.key, 'night', `expected night (3.0x) to beat fix (2.0x), got 
 // ...and a small raw count still wins if it's far enough from typical.
 // 8% wip is 4x baseline; 30% night is only 2x.
 assert.equal(pickVerdict(ordinary({ nightPct: 30, lingo: { wip: 40, fix: 100, docs: 30 } })).key, 'wip');
+
+// Streak used to be scored as a raw day count divided by 7 — an unbounded number
+// ranked against bounded shares — so any repo with a 40+ day streak won
+// Marathoner regardless of anything else, and the verdict converged there forever
+// as the repo aged. It is now a share of the repo's committed lifespan, so age
+// cancels: a 60-day streak in a 3-year-old repo is 5.5% of its life (1.8x, not a
+// personality) and a strong behavioural signal wins again.
+{
+  const oldRepo = {
+    firstCommit: { date: '2022-01-01' },
+    lastCommit: { date: '2024-12-31' }, // 1,096-day span
+    longestStreak: 60,                  // 5.5% of the span — real, not remarkable
+  };
+  assert.equal(pickVerdict(ordinary({ ...oldRepo, nightPct: 60 })).key, 'night',
+    'a 60-day streak in a 3-year-old repo must not beat a 4x behavioural signal');
+}
 
 // 4. Too few commits to say anything: no behavioural verdict, no solo claim.
 assert.equal(pickVerdict(ordinary({ total: 5, nightPct: 90 })).key, 'force');

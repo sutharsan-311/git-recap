@@ -98,7 +98,7 @@ const LOCKFILE = /(^|\/)(package-lock\.json|yarn\.lock|pnpm-lock\.yaml|bun\.lock
 const VENDORED = /(^|\/)(node_modules|bower_components|vendor|third_party|dist|build|\.next|out)\/|\.min\.(js|css)$|\.map$/;
 const isGenerated = (p) => LOCKFILE.test(p) || VENDORED.test(p);
 
-const utcDay = (key) => {
+export const utcDay = (key) => {
   const [y, m, d] = key.split('-').map(Number);
   return Date.UTC(y, m - 1, d) / 86400000;
 };
