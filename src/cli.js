@@ -120,6 +120,15 @@ export function sandboxUnreadable(p) {
 // it stays testable, like sandboxUnreadable below.
 export const fileUrl = (p) => pathToFileURL(p).href;
 
+// A repo whose history sits inside one calendar year printed "2026 – 2026" on the
+// share card. Exported so it stays testable, like the two helpers above.
+export function rangeYears(s) {
+  if (!s.firstCommit || !s.lastCommit) return '';
+  const a = s.firstCommit.date.slice(0, 4);
+  const b = s.lastCommit.date.slice(0, 4);
+  return a === b ? a : `${a} – ${b}`;
+}
+
 function openBrowser(filePath) {
   const url = fileUrl(filePath);
   const plat = process.platform;
@@ -172,8 +181,7 @@ export function main(argv) {
   s.verdict = pickVerdict(s);
   s.repo = path.basename(repo);
 
-  const year = (k) => k.split('-')[0];
-  const range = s.firstCommit ? `${year(s.firstCommit.date)} – ${year(s.lastCommit.date)}` : '';
+  const range = rangeYears(s);
 
   if (opts.json) {
     console.log(JSON.stringify(s, null, 2));

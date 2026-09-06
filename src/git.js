@@ -2,7 +2,10 @@ import { spawnSync } from 'node:child_process';
 import { langOf } from './langs.js';
 
 const SEP = '\x01'; // record separator at each commit
-const FMT = `%x01%H${'\x02'}%an${'\x03'}%ae${'\x04'}%aI${'\x05'}%s`;
+// %aN/%aE, not %an/%ae: the capitalised forms make git apply .mailmap, which is
+// how one person committing as two identities (a web-UI noreply address, say) is
+// collapsed back into one. A no-op in repos without a .mailmap.
+const FMT = `%x01%H${'\x02'}%aN${'\x03'}%aE${'\x04'}%aI${'\x05'}%s`;
 
 function runGit(repo, args, maxBuffer = 1 << 29) {
   const res = spawnSync('git', ['-C', repo, '-c', 'core.quotepath=false', ...args], {
@@ -219,8 +222,15 @@ export function analyze(commits) {
     .slice(0, 5);
   const topLangs = [...langs.values()].sort((a, b) => b.ins - a.ins);
   const langInsTotal = topLangs.reduce((s, l) => s + l.ins, 0);
+  // Subjects like "Sutharsan: fix the parser" put the author's own name at the top
+  // of the verb chart. A name is not commit lingo.
+  const nameWords = new Set();
+  for (const a of authors.values()) {
+    for (const w of a.name.toLowerCase().split(/[^a-z0-9']+/)) if (w) nameWords.add(w);
+  }
   const topVerbs = [...verbs.entries()]
-    .filter(([w, n]) => w.length > 1 && n > 1 && !['the', 'a', 'an', 'and', 'for', 'with', 'this', 'that', 'to', 'of', 'in', 'on'].includes(w))
+    .filter(([w, n]) => w.length > 1 && n > 1 && !nameWords.has(w)
+      && !['the', 'a', 'an', 'and', 'for', 'with', 'this', 'that', 'to', 'of', 'in', 'on'].includes(w))
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
 

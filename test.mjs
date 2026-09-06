@@ -1,11 +1,11 @@
 // Run: node test.mjs   (no framework, on purpose)
 import assert from 'node:assert/strict';
 import { pickVerdict } from './src/verdict.js';
-import { analyze, parseLog } from './src/git.js';
+import { analyze, parseLog, readLog } from './src/git.js';
 import { heatmapSvg, identiconSvg, coverKicker } from './src/report.js';
 import { THEMES } from './src/themes.js';
 import { buildCardSvg } from './src/card.js';
-import { sandboxUnreadable, fileUrl } from './src/cli.js';
+import { sandboxUnreadable, fileUrl, rangeYears } from './src/cli.js';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -321,6 +321,68 @@ for (const [key, signal] of Object.entries(only)) {
   // the slide still renders a hardcoded string, which is what shipped.
   assert.doesNotMatch(fs.readFileSync('./src/report.js', 'utf8'), /'YOUR YEAR IN CODE'/,
     'the cover slide must not hardcode a year claim');
+}
+
+// --------------------------------------------------------------------- mailmap
+// One person often commits under two identities — a local address and GitHub's
+// web-UI noreply one — and shows up twice in the crew with two different faces.
+// git already solves this with .mailmap, but only for %aN/%aE; the lowercase
+// %an/%ae the log used to request ignore it. Real repo, real git, real mailmap.
+{
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'git-recap-mailmap-'));
+  const git = (...a) => spawnSync('git', ['-C', dir, ...a], { encoding: 'utf8' });
+  git('init', '-q');
+  git('config', 'user.name', 'Real Name');
+  git('config', 'user.email', 'real@example.com');
+  git('config', 'commit.gpgsign', 'false');
+  fs.writeFileSync(path.join(dir, 'a.txt'), 'x');
+  git('add', '-A');
+  git('commit', '-q', '-m', 'first');
+  git('config', 'user.name', 'webui');
+  git('config', 'user.email', '1+webui@users.noreply.github.com');
+  fs.writeFileSync(path.join(dir, 'b.txt'), 'y');
+  git('add', '-A');
+  git('commit', '-q', '-m', 'second');
+
+  const authorsOf = () => analyze(parseLog(readLog(dir, {}))).authors;
+  assert.equal(authorsOf().length, 2, 'without a mailmap the two identities stay separate');
+
+  fs.writeFileSync(path.join(dir, '.mailmap'),
+    'Real Name <real@example.com> <1+webui@users.noreply.github.com>\n');
+  const merged = authorsOf();
+  fs.rmSync(dir, { recursive: true, force: true });
+  assert.equal(merged.length, 1, 'a .mailmap must collapse them into one person');
+  assert.equal(merged[0].commits, 2);
+  assert.equal(merged[0].name, 'Real Name');
+}
+
+// ------------------------------------------------------------------- verb noise
+// "Sutharsan: fix the parser" is a real commit style, and it put the author's own
+// name third in the top-verb chart of their own repo. A name is not commit lingo.
+{
+  const c = (subject, name) => ({
+    dateKey: '2025-01-01', hour: 12, subject,
+    authorName: name, authorEmail: `${name}@x.c`,
+    files: [{ path: 'src/a.ts', ins: 1, del: 0, binary: false }],
+  });
+  const st = analyze([
+    c('Sutharsan: add the thing', 'Sutharsan'), c('Sutharsan: fix the thing', 'Sutharsan'),
+    c('Sutharsan: drop the thing', 'Sutharsan'), c('refactor the engine', 'Sutharsan'),
+    c('refactor the parser', 'Sutharsan'),
+  ]);
+  assert.ok(!st.topVerbs.some((v) => v.word === 'sutharsan'),
+    `an author's name must not be listed as a commit verb, got ${JSON.stringify(st.topVerbs)}`);
+  assert.equal(st.topVerbs[0].word, 'refactor');
+}
+
+// ------------------------------------------------------------------ year range
+// A repo whose whole history sits in one calendar year rendered "2026 - 2026" on
+// the share card.
+{
+  const span = (a, b) => ({ firstCommit: { date: a }, lastCommit: { date: b } });
+  assert.equal(rangeYears(span('2026-03-24', '2026-09-06')), '2026', 'one year must not be printed twice');
+  assert.equal(rangeYears(span('2024-09-01', '2026-07-01')), '2024 \u2013 2026');
+  assert.equal(rangeYears({}), '');
 }
 
 // ------------------------------------------------------------------ bin entry
