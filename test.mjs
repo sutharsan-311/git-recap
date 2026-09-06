@@ -7,6 +7,9 @@ import { THEMES } from './src/themes.js';
 import { buildCardSvg } from './src/card.js';
 import { sandboxUnreadable, fileUrl } from './src/cli.js';
 import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 
 // A repo with nothing remarkable: every rate sits at the TYPICAL baseline.
 const ordinary = (over = {}) => ({
@@ -298,6 +301,23 @@ for (const [key, signal] of Object.entries(only)) {
   assert.ok(claimed, 'README states an approximate source size');
   const n = Number(claimed[1].replace(/,/g, ''));
   assert.ok(Math.abs(n - srcLines) / srcLines < 0.1, `README says ~${n} lines, source is ${srcLines}`);
+}
+
+// ------------------------------------------------------------------ bin entry
+// npm installs the CLI as a SYMLINK into its bin dir. bin/git-recap.js used to
+// guard its body with `fileURLToPath(import.meta.url) === process.argv[1]`, but
+// import.meta.url resolves symlinks and argv[1] does not, so the two never
+// matched for an installed user: `npx git-recap` printed nothing and exited 0.
+// Running the file directly hid it completely — only a symlink reproduces it.
+{
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'git-recap-bin-'));
+  const link = path.join(dir, 'git-recap');
+  fs.symlinkSync(path.resolve('bin/git-recap.js'), link);
+  const r = spawnSync(process.execPath, [link, '--version'], { encoding: 'utf8' });
+  fs.rmSync(dir, { recursive: true, force: true });
+  assert.equal(r.status, 0, `bin exited ${r.status}: ${r.stderr}`);
+  assert.match(r.stdout.trim(), /^\d+\.\d+\.\d+$/,
+    `the CLI must run when invoked through a symlink, got ${JSON.stringify(r.stdout)}`);
 }
 
 // ----------------------------------------------------------------------- nits
