@@ -8,7 +8,9 @@ import { THEMES } from './themes.js';
 import { buildHtml } from './report.js';
 import { buildCardSvg } from './card.js';
 
-const VERSION = '1.0.0';
+// Single source of truth: package.json. A hardcoded copy here drifts the moment
+// someone bumps one and not the other, and it is stamped into every deck.
+const VERSION = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
 
 const HELP = `
   git-wrapped · Spotify Wrapped for your git history
