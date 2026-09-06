@@ -38,6 +38,7 @@
   "homepage": "https://github.com/sutharsan-311/git-recap#readme",
   "scripts": {
     "test": "node test.mjs",
-    "screenshots": "node scripts/make-screenshots.mjs"
+    "screenshots": "node scripts/make-screenshots.mjs",
+    "demo-gif": "node scripts/make-demo-gif.mjs"
   }
 }

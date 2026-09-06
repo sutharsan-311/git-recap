@@ -18,8 +18,7 @@ No account. No API key. No upload. Zero dependencies.
 
 ---
 
-> 🎬 *Demo video goes here — record 15 seconds, drag it into a GitHub issue, paste the
-> `user-attachments` URL it gives you on this line. See [docs/LAUNCH.md](docs/LAUNCH.md).*
+![git-recap demo](docs/demo.gif)
 
 | The story (up to 11 slides) | Every day you showed up |
 | --- | --- |
