@@ -29,7 +29,7 @@ export function buildCardSvg(s, theme, { repo, range } = {}) {
 
   const tiles = [
     { label: 'COMMITS', value: fmt(s.total), color: theme.a1 },
-    { label: 'TOP LANGUAGE', value: topLang, sub: topLangShare ? `${topLangShare}% of code written` : null, color: theme.b1 },
+    { label: 'TOP LANGUAGE', value: topLang, sub: topLangShare ? `${topLangShare}% of lines written` : null, color: theme.b1 },
     { label: 'LONGEST STREAK', value: `${s.longestStreak}d`, color: theme.a2 },
     { label: '3AM COMMITS', value: fmt(s.ghostCommits), color: theme.b2 },
   ];

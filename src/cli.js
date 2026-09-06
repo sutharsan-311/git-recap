@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 import { readLog, parseLog, analyze } from './git.js';
 import { pickVerdict } from './verdict.js';
 import { THEMES } from './themes.js';
@@ -61,7 +62,7 @@ function printSummary(s) {
   console.log('');
   console.log(`  ${BOLD('★ ' + fmt(s.total) + ' commits')} ${DIM('·')} ${c(fmt(s.activeDays) + ' active days')} ${DIM('·')} ${m('+' + fmt(s.ins) + ' lines')}`);
   console.log(`  ${c(s.longestStreak + '-day streak')} ${DIM('·')} ${m(fmt(s.ghostCommits) + ' commits after midnight')} ${DIM('·')} ${c(Math.round(s.nightPct) + '% at night')}`);
-  if (s.langs[0]) console.log(`  Top language: ${BOLD(s.langs[0].name)} ${DIM('(' + Math.round(s.langs[0].share * 100) + '% of code written)')}`);
+  if (s.langs[0]) console.log(`  Top language: ${BOLD(s.langs[0].name)} ${DIM('(' + Math.round(s.langs[0].share * 100) + '% of lines written)')}`);
   console.log('');
   console.log(`  ${BOLD(s.verdict.emoji + ' ' + s.verdict.title)}`);
   console.log(`  ${DIM(s.verdict.blurb)}`);
@@ -112,8 +113,13 @@ export function sandboxUnreadable(p) {
   return p.split(path.sep).some((seg) => seg.startsWith('.') && seg !== '.' && seg !== '..');
 }
 
+// file:// URLs must go through pathToFileURL: concatenating 'file://' + a path
+// breaks on Windows drive letters, spaces and non-ASCII. Pure and exported so
+// it stays testable, like sandboxUnreadable below.
+export const fileUrl = (p) => pathToFileURL(p).href;
+
 function openBrowser(filePath) {
-  const url = 'file://' + filePath;
+  const url = fileUrl(filePath);
   const plat = process.platform;
   const cmd = plat === 'darwin' ? 'open' : plat === 'win32' ? 'cmd' : 'xdg-open';
   const args = plat === 'win32' ? ['/c', 'start', '', url] : [url];

@@ -5,7 +5,7 @@ import { analyze, parseLog } from './src/git.js';
 import { heatmapSvg, identiconSvg } from './src/report.js';
 import { THEMES } from './src/themes.js';
 import { buildCardSvg } from './src/card.js';
-import { sandboxUnreadable } from './src/cli.js';
+import { sandboxUnreadable, fileUrl } from './src/cli.js';
 import fs from 'node:fs';
 
 // A repo with nothing remarkable: every rate sits at the TYPICAL baseline.
@@ -278,4 +278,49 @@ for (const [key, signal] of Object.entries(only)) {
   assert.ok(Math.abs(n - srcLines) / srcLines < 0.1, `README says ~${n} lines, source is ${srcLines}`);
 }
 
-console.log('ok — verdict scoring, heatmap window, language stats, identicons, animated card, sandboxed browsers, deck determinism, README claims');
+// ----------------------------------------------------------------------- nits
+// file:// URLs were built by string concatenation ('file://' + path), which
+// breaks on spaces, non-ASCII and fragments, and on Windows drive letters —
+// and Windows is the only platform here with no other coverage. pathToFileURL
+// encodes all of it. (The drive-letter form file:///C:/... itself can only be
+// exercised on a Windows runner; the encoding bugs below reproduce everywhere.)
+{
+  assert.equal(fileUrl('/home/u/my repo/wrapped.html'), 'file:///home/u/my%20repo/wrapped.html');
+  assert.equal(fileUrl('/home/üser/wrapped.html'), 'file:///home/%C3%BCser/wrapped.html');
+  assert.equal(fileUrl('/w/r#1.html'), 'file:///w/r%231.html', 'a raw # silently truncates the URL at the fragment');
+}
+
+// topVerbs excluded 'add', 'update' and 'new' — the three most common commit
+// verbs — so the "commit lingo" slide showed your top verbs WITH your actual
+// top verbs removed. It shows them now.
+{
+  const commit = (subject) => ({
+    dateKey: '2025-01-01', hour: 12, subject,
+    authorName: 'a', authorEmail: 'a@b.c',
+    files: [{ path: 'src/a.ts', ins: 1, del: 0, binary: false }],
+  });
+  const st = analyze([
+    commit('add feature one'), commit('add feature two'), commit('add feature three'),
+    commit('add feature four'), commit('add feature five'),
+    commit('refactor engine'), commit('refactor engine'),
+  ]);
+  assert.equal(st.topVerbs[0].word, 'add', 'the most common verb must not be filtered out');
+  assert.equal(st.topVerbs[0].n, 5);
+}
+
+// The language share counts .md/.json/.yaml/.txt lines, so calling it "code
+// written" overclaims — Markdown is not code. Both places that print the share
+// (share card, terminal summary) now say lines.
+{
+  const stats = {
+    total: 10, longestStreak: 1, ghostCommits: 0,
+    langs: [{ name: 'Markdown', share: 0.9 }],
+    verdict: { emoji: '🗺️', title: 'The Cartographer', blurb: 'docs.' },
+  };
+  const svg = buildCardSvg(stats, THEMES.night, { repo: 'demo', range: '' });
+  assert.doesNotMatch(svg, /of code written/, 'the card must not call doc lines code');
+  assert.match(svg, /of lines written/);
+  assert.doesNotMatch(fs.readFileSync('./src/cli.js', 'utf8'), /of code written/);
+}
+
+console.log('ok — verdict scoring, heatmap window, language stats, identicons, animated card, sandboxed browsers, deck determinism, README claims, date windows, merges, CLI nits');

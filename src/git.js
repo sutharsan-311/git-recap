@@ -220,7 +220,7 @@ export function analyze(commits) {
   const topLangs = [...langs.values()].sort((a, b) => b.ins - a.ins);
   const langInsTotal = topLangs.reduce((s, l) => s + l.ins, 0);
   const topVerbs = [...verbs.entries()]
-    .filter(([w, n]) => w.length > 1 && n > 1 && !['the', 'a', 'an', 'and', 'for', 'with', 'this', 'that', 'to', 'of', 'in', 'on', 'add', 'update', 'new'].includes(w))
+    .filter(([w, n]) => w.length > 1 && n > 1 && !['the', 'a', 'an', 'and', 'for', 'with', 'this', 'that', 'to', 'of', 'in', 'on'].includes(w))
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
 
