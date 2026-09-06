@@ -13,6 +13,17 @@ function rangeLabel(s) {
   return `${p(s.firstCommit.date)} – ${p(s.lastCommit.date)}`;
 }
 
+// The cover kicker said "YOUR YEAR IN CODE" on every run without --year, but the
+// default scope is the entire history — the demo repo spans Sep 2024 to Jul 2026.
+// Name the years the commits actually cover.
+export function coverKicker(s, year) {
+  if (year) return `YOUR ${esc(year)} IN CODE`;
+  const a = s.firstCommit && s.firstCommit.date.slice(0, 4);
+  const b = s.lastCommit && s.lastCommit.date.slice(0, 4);
+  if (!a || !b) return 'YOUR CODE, SO FAR';
+  return a === b ? `YOUR ${a} IN CODE` : `YOUR ${a}–${b} IN CODE`;
+}
+
 function shortPath(p, max = 42) {
   if (p.length <= max) return p;
   const parts = p.split('/');
@@ -206,7 +217,7 @@ function buildSlides(s, t, meta) {
 
   // 1 — cover
   slides.push(slide(`
-    <div class="kicker rv" style="--d:.05s">${meta.year ? `YOUR ${esc(meta.year)} IN CODE` : 'YOUR YEAR IN CODE'}</div>
+    <div class="kicker rv" style="--d:.05s">${coverKicker(s, meta.year)}</div>
     <h1 class="rv" style="--d:.15s"><span class="grad">${esc(meta.repo)}</span></h1>
     <p class="sub rv" style="--d:.3s">${esc(range)} · ${fmt(s.total)} commits · ${s.authors.length === 1 ? 'one author' : `${s.authors.length} authors`}</p>
     <p class="hintline rv" style="--d:.45s">This story was generated 100% locally. No account, no upload, no tracking.</p>

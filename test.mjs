@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { pickVerdict } from './src/verdict.js';
 import { analyze, parseLog } from './src/git.js';
-import { heatmapSvg, identiconSvg } from './src/report.js';
+import { heatmapSvg, identiconSvg, coverKicker } from './src/report.js';
 import { THEMES } from './src/themes.js';
 import { buildCardSvg } from './src/card.js';
 import { sandboxUnreadable, fileUrl } from './src/cli.js';
@@ -301,6 +301,26 @@ for (const [key, signal] of Object.entries(only)) {
   assert.ok(claimed, 'README states an approximate source size');
   const n = Number(claimed[1].replace(/,/g, ''));
   assert.ok(Math.abs(n - srcLines) / srcLines < 0.1, `README says ~${n} lines, source is ${srcLines}`);
+}
+
+// ----------------------------------------------------------------- cover kicker
+// The cover said "YOUR YEAR IN CODE" whenever --year was absent, but that is the
+// default and the default scope is all of history: the example deck claimed a
+// year over a range its own subtitle printed as Sep 2024 - Jul 2026.
+{
+  const span = (a, b) => ({ firstCommit: { date: a }, lastCommit: { date: b } });
+  assert.equal(coverKicker(span('2024-09-01', '2026-07-01')), 'YOUR 2024\u20132026 IN CODE',
+    'a multi-year history must not be called a year');
+  assert.equal(coverKicker(span('2025-02-03', '2025-11-30')), 'YOUR 2025 IN CODE',
+    'a history inside one calendar year should name it');
+  assert.equal(coverKicker(span('2024-01-01', '2026-01-01'), '2025'), 'YOUR 2025 IN CODE',
+    '--year still wins: it is what git was filtered on');
+  assert.equal(coverKicker({}), 'YOUR CODE, SO FAR');
+
+  // ...and the cover must actually call it. The helper being right is no use if
+  // the slide still renders a hardcoded string, which is what shipped.
+  assert.doesNotMatch(fs.readFileSync('./src/report.js', 'utf8'), /'YOUR YEAR IN CODE'/,
+    'the cover slide must not hardcode a year claim');
 }
 
 // ------------------------------------------------------------------ bin entry
