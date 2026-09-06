@@ -221,7 +221,8 @@ for (const [key, signal] of Object.entries(only)) {
   // Regression: colour came straight off the hash, so 3 authors drawn from an
   // 8-colour palette collided ~30% of the time and the crew read as one blur.
   const used = new Set();
-  const inks = ['sutharsanmail311@gmail.com', '159125892+gpt-engineer-app[bot]@users.noreply.github.com', '144416509+sutharsan-311@users.noreply.github.com']
+  // These three seeds collide on #8a7dff without the Set — that's why they're here.
+  const inks = ['alex@demo.io', 'alex@example.com', 'alex@users.noreply.github.com']
     .map((e) => ink(identiconSvg(e, THEMES.night, used)));
   assert.equal(new Set(inks).size, inks.length, `crew colours must be distinct, got ${inks}`);
 
