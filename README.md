@@ -21,7 +21,7 @@ No account. No API key. No upload. Zero dependencies.
 > 🎬 *Demo video goes here — record 15 seconds, drag it into a GitHub issue, paste the
 > `user-attachments` URL it gives you on this line. See [docs/LAUNCH.md](docs/LAUNCH.md).*
 
-| The story (11 animated slides) | Every day you showed up |
+| The story (up to 11 slides) | Every day you showed up |
 | --- | --- |
 | ![story](docs/screenshots/story-cover.png) | ![heatmap](docs/screenshots/story-heatmap.png) |
 | **Who did the work** | **The verdict** 👏 |
@@ -114,11 +114,11 @@ Everything from one `git log --numstat` pass over your history:
 - **Ride-or-die files** by churn
 - **Commit lingo** — top verbs, "wip" count, emoji commits, your longest message
 - **Ghost hours** — commits between midnight and 5am
-- **Your verdict** — one of 8 deterministic coding personalities
+- **Your verdict** — one of 9 deterministic coding personalities
 
 ## Privacy
 
-Everything runs on your machine with the `git` binary you already have. There is no server, no telemetry, no network call. It reads, it computes, it writes three files. Read the whole source — it's ~700 lines with zero dependencies.
+Everything runs on your machine with the `git` binary you already have. There is no server, no telemetry, no network call. It reads, it computes, it writes three files. Read the whole source — it's ~1,400 lines with zero dependencies.
 
 ## Star history ⭐
 

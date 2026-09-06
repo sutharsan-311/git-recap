@@ -178,4 +178,39 @@ for (const [key, signal] of Object.entries(only)) {
     assert.equal(sandboxUnreadable(p), false, `${p} is fine and must not warn`);
   }
 }
-console.log('ok — verdict scoring, heatmap window, language stats, identicons, animated card, sandboxed browsers, deck determinism');
+// ------------------------------------------------------------------ README claims
+// The README invites a source audit, so its self-describing numbers are asserted
+// against the things they describe. All three had drifted at once: a fixed "11
+// slides" (three render conditionally — languages, files, crew), "8
+// personalities" (7 behavioural candidates + 2 fallbacks), "~700 lines" for a
+// 1,422-line source tree.
+{
+  const readme = fs.readFileSync('./README.md', 'utf8');
+
+  // Slides: the languages, files and crew slides only render when there's data
+  // for them, so the deck size varies per repo; no fixed count may be claimed.
+  assert.doesNotMatch(readme, /11 animated slides/, 'slide count is conditional, not a fixed 11');
+
+  // Personalities: every behavioural candidate in pickVerdict plus the fallbacks.
+  const verdictSrc = fs.readFileSync('./src/verdict.js', 'utf8');
+  const behavioural = (verdictSrc.match(/^\s*add\(/gm) || []).length;
+  const fallbacks = (verdictSrc.match(/^\s{2}\w+: \{$/gm) || []).length;
+  assert.ok(
+    readme.includes(`one of ${behavioural + fallbacks} deterministic coding personalities`),
+    `README personality count does not match code: code offers ${behavioural + fallbacks}`,
+  );
+
+  // Source size: the "~N lines" claim must track the actual tree, within 10%.
+  const count = (f) => fs.readFileSync(f, 'utf8').split('\n').length - 1;
+  const files = [
+    ...fs.readdirSync('./src').map((f) => `src/${f}`),
+    ...fs.readdirSync('./bin').map((f) => `bin/${f}`),
+  ].filter((f) => f.endsWith('.js'));
+  const srcLines = files.reduce((n, f) => n + count(f), 0);
+  const claimed = readme.match(/~([\d,]+) lines/);
+  assert.ok(claimed, 'README states an approximate source size');
+  const n = Number(claimed[1].replace(/,/g, ''));
+  assert.ok(Math.abs(n - srcLines) / srcLines < 0.1, `README says ~${n} lines, source is ${srcLines}`);
+}
+
+console.log('ok — verdict scoring, heatmap window, language stats, identicons, animated card, sandboxed browsers, deck determinism, README claims');
