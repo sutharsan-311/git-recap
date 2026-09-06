@@ -119,12 +119,6 @@ Everything from one `git log --numstat` pass over your history:
 
 Everything runs on your machine with the `git` binary you already have. There is no server, no telemetry, no network call. It reads, it computes, it writes three files. Read the whole source — it's ~1,400 lines with zero dependencies.
 
-## Star history ⭐
-
-If this made you smile, [star the repo](../../stargazers) — it's the only metric that keeps this going.
-
-[![Star History Chart](https://api.star-history.com/svg?repos=sutharsan-311/git-recap&type=Date)](https://star-history.com/#sutharsan-311/git-recap&Date)
-
 ## Contributing
 
 PRs welcome — verdicts, themes, and languages are all data-driven tables, so adding one is a great first issue.
