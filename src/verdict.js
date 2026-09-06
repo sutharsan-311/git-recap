@@ -32,7 +32,7 @@ const FALLBACK = {
     key: 'force',
     title: 'The Full-Stack Force',
     emoji: '⚡',
-    blurb: () => 'Commits at every hour, in every corner of the repo. Perfectly balanced, as all codebases should be.',
+    blurb: () => 'No habit stood out from the crowd — you committed in a fairly typical rhythm. That\'s most repos, and most repos ship.',
   },
 };
 
@@ -47,8 +47,12 @@ export function pickVerdict(s) {
     : 0;
   const cands = [];
   const add = (key, value, title, emoji, blurb) => {
+    // A rate estimated from too few commits is noise: 2 night commits out of 10
+    // is not a personality. A signal may only win when its baseline predicts
+    // ~5 events across the repo (total * baseline >= 5); smaller repos fall
+    // through to the fallback instead of getting a verdict from noise.
     const score = value / TYPICAL[key];
-    if (s.total >= 10 && score > 1) cands.push({ key, score, title, emoji, blurb });
+    if (s.total * TYPICAL[key] >= 5 && score > 1) cands.push({ key, score, title, emoji, blurb });
   };
 
   add('night', s.nightPct / 100, 'The Midnight Architect', '🦉',

@@ -57,6 +57,22 @@ assert.equal(pickVerdict(ordinary({ nightPct: 30, lingo: { wip: 40, fix: 100, do
 // 4. Too few commits to say anything: no behavioural verdict, no solo claim.
 assert.equal(pickVerdict(ordinary({ total: 5, nightPct: 90 })).key, 'force');
 
+// 4b. The gate is per-signal: a 15% base rate cannot be estimated from 10
+//     samples, and 2 night commits out of 10 used to crown The Midnight
+//     Architect. A signal may only win when its baseline predicts ~5 events
+//     (total * TYPICAL[key] >= 5); below that, fall through to the fallback.
+assert.equal(pickVerdict(ordinary({ total: 12, nightPct: 50 })).key, 'force',
+  '2 night commits out of 12 is noise, not a personality');
+
+// ...but the gate must not over-gate: 24 night commits out of 40 clears it.
+assert.equal(pickVerdict(ordinary({ total: 40, nightPct: 60 })).key, 'night');
+
+// 4c. "Nothing unusual found" used to read as an earned compliment ("Perfectly
+//     balanced, as all codebases should be"). It is a description, not an award.
+const noSignal = pickVerdict(ordinary({ authors: [{}, {}] }));
+assert.doesNotMatch(noSignal.blurb, /perfectly balanced/i,
+  'the no-signal fallback must not present ordinariness as an achievement');
+
 // 5. Every verdict is reachable and ships what the report needs to render it.
 const only = {
   night:   { nightPct: 60 },
