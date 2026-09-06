@@ -90,18 +90,6 @@ export function parseLog(out, { since, until } = {}) {
   return commits;
 }
 
-export function mergeCount(repo, { since, until, author } = {}) {
-  const args = ['rev-list', '--count', '--merges', 'HEAD'];
-  if (since) args.push(`--since=${since}`);
-  if (until) args.push(`--until=${until}`);
-  if (author) args.push(`--author=${author}`);
-  try {
-    return Number(runGit(repo, args, 1 << 16).trim()) || 0;
-  } catch {
-    return 0;
-  }
-}
-
 // Generated and vendored files are not languages you wrote. One `package-lock.json`
 // bump is 5k lines of "JSON" and will happily take the top slot on your share card.
 const LOCKFILE = /(^|\/)(package-lock\.json|yarn\.lock|pnpm-lock\.yaml|bun\.lockb|composer\.lock|Cargo\.lock|Gemfile\.lock|poetry\.lock|Pipfile\.lock|go\.sum)$/;
@@ -113,7 +101,7 @@ export const utcDay = (key) => {
   return Date.UTC(y, m - 1, d) / 86400000;
 };
 
-export function analyze(commits, { merges = 0 } = {}) {
+export function analyze(commits) {
   const daily = new Map();
   const hourCounts = new Array(24).fill(0);
   const weekdayCounts = new Array(7).fill(0);
@@ -239,7 +227,6 @@ export function analyze(commits, { merges = 0 } = {}) {
   const stats = {
     repo: null, // filled by caller
     total,
-    merges,
     ins,
     del,
     activeDays: daily.size,

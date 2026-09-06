@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
-import { readLog, parseLog, analyze, mergeCount } from './git.js';
+import { readLog, parseLog, analyze } from './git.js';
 import { pickVerdict } from './verdict.js';
 import { THEMES } from './themes.js';
 import { buildHtml } from './report.js';
@@ -160,8 +160,7 @@ export function main(argv) {
   }
   console.error(DIM(`  ● analyzing ${fmt(commits.length)} commits…`));
 
-  const merges = mergeCount(repo, filters);
-  const s = analyze(commits, { merges });
+  const s = analyze(commits);
   s.verdict = pickVerdict(s);
   s.repo = path.basename(repo);
 

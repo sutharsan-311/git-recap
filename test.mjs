@@ -147,6 +147,19 @@ for (const [key, signal] of Object.entries(only)) {
   }
 }
 
+// --------------------------------------------------------------------- merges
+// s.merges was computed by a second full git pass (rev-list --count --merges)
+// and rendered nowhere: grep -c merges src/report.js src/card.js is 0, 0.
+// Dead data — the field and the pass are gone.
+{
+  const st = analyze([{
+    dateKey: '2025-01-01', hour: 12, subject: 'x',
+    authorName: 'a', authorEmail: 'a@b.c',
+    files: [{ path: 'src/a.ts', ins: 1, del: 0, binary: false }],
+  }]);
+  assert.ok(!('merges' in st), 'merges was computed and never rendered');
+}
+
 // ------------------------------------------------------------------ date windows
 // --since/--until used to be passed to git, which filters on COMMITTER date,
 // while the heatmap and power hours bucket on AUTHOR date (%aI). Rebasing a
