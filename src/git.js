@@ -28,18 +28,25 @@ function normalizeNumstatPath(p) {
   return s.replace(/^"|"$/g, '');
 }
 
-export function readLog(repo, { since, until, author } = {}) {
+export function readLog(repo, { author } = {}) {
+  // No --since/--until here on purpose: git filters those on COMMITTER date,
+  // while the deck buckets on AUTHOR date (%aI), and a rebase would make the
+  // window and the bucketing disagree. parseLog applies the window instead.
   const args = ['log', `--pretty=format:${FMT}`, '--numstat', '--no-color'];
-  if (since) args.push(`--since=${since}`);
-  if (until) args.push(`--until=${until}`);
   if (author) args.push(`--author=${author}`);
   const out = runGit(repo, args);
   return out;
 }
 
-export function parseLog(out) {
+export function parseLog(out, { since, until } = {}) {
   const commits = [];
   if (!out) return commits;
+  // The window is applied on the author date, the same field the heatmap and
+  // power hours bucket by. Costs: the full unparsed log crosses the pipe on
+  // filtered runs, and boundary parsing moves from git to Date.parse
+  // (date-only = UTC midnight, date-time without offset = local time).
+  const min = since ? Date.parse(since) : null;
+  const max = until ? Date.parse(until) : null;
   const records = out.split(SEP);
   for (const rec of records) {
     if (!rec) continue;
@@ -48,6 +55,9 @@ export function parseLog(out) {
     const body = nl === -1 ? '' : rec.slice(nl + 1);
     const [hash, name, email, date, subject] = header.split(/[\x02\x03\x04\x05]/);
     if (!hash || !date) continue;
+    const t = Date.parse(date);
+    if (min !== null && (Number.isNaN(t) || t < min)) continue;
+    if (max !== null && (Number.isNaN(t) || t > max)) continue;
     const dateKey = date.slice(0, 10);
     const hour = Number(date.slice(11, 13));
 

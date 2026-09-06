@@ -1,7 +1,7 @@
 // Run: node test.mjs   (no framework, on purpose)
 import assert from 'node:assert/strict';
 import { pickVerdict } from './src/verdict.js';
-import { analyze } from './src/git.js';
+import { analyze, parseLog } from './src/git.js';
 import { heatmapSvg, identiconSvg } from './src/report.js';
 import { THEMES } from './src/themes.js';
 import { buildCardSvg } from './src/card.js';
@@ -145,6 +145,24 @@ for (const [key, signal] of Object.entries(only)) {
   for (let i = 1; i < seen.length; i++) {
     assert.equal((seen[i - 1] + 1) % 12, seen[i], `month label skipped after ${M[seen[i - 1]]}`);
   }
+}
+
+// ------------------------------------------------------------------ date windows
+// --since/--until used to be passed to git, which filters on COMMITTER date,
+// while the heatmap and power hours bucket on AUTHOR date (%aI). Rebasing a
+// year of work last month made the two disagree, and git dropped the commits
+// before the parser ever saw them. The window is now applied here, on the
+// author date the deck buckets by, so they cannot disagree.
+{
+  const rec = (hash, aDate, subject) =>
+    `\x01${hash}\x02A\x03a@x.c\x04${aDate}\x05${subject}\n1\t0\tsrc/a.ts`;
+  const out =
+    rec('in-range', '2024-06-01T03:00:00+00:00', 'real work') +
+    rec('rebased', '2026-01-05T03:00:00+00:00', 'same work, rebased last month');
+  const commits = parseLog(out, { since: '2024-01-01', until: '2024-12-31T23:59:59' });
+  assert.equal(commits.length, 1, 'a rebase must not drag 2026 commits into a 2024 window');
+  assert.equal(commits[0].hash, 'in-range');
+  assert.equal(parseLog(out).length, 2, 'with no window, nothing is dropped');
 }
 
 // -------------------------------------------------------------------- identicons

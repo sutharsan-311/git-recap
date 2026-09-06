@@ -145,7 +145,7 @@ export function main(argv) {
   console.error(DIM('  ● reading git history…'));
   let commits;
   try {
-    commits = parseLog(readLog(repo, filters));
+    commits = parseLog(readLog(repo, filters), filters);
   } catch (e) {
     if (/does not have any commits|unknown revision|bad revision/i.test(e.message)) {
       console.error('  ✖ no commits found for this range — nothing to wrap.');
