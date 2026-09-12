@@ -1,6 +1,6 @@
 {
   "name": "git-recap",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Spotify Wrapped for your git history — a local, zero-dependency, animated story of your code. Terminal card + shareable SVG, no upload, no API key.",
   "type": "module",
   "bin": {

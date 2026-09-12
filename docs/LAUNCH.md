@@ -16,14 +16,14 @@ The product is the demo. The strategy is: **let people share themselves.** Here'
 | Channel | Angle | Timing |
 | --- | --- | --- |
 | **X/Twitter** | Your own wrapped card + "I built Spotify Wrapped for git. 100% local, zero deps, `npx git-recap`" | Tue–Thu, 9am ET |
-| **Hacker News** | "Show HN: Git-Wrapped – Spotify Wrapped for your git history, fully local" | Tue–Thu, 8–10am ET. NEVER Monday, never Friday |
+| **Hacker News** | "Show HN: git-recap – Spotify Wrapped for your git history, fully local" | Tue–Thu, 8–10am ET. NEVER Monday, never Friday |
 | **r/programming + r/commandline + r/devops** | Same as HN but lead with the privacy/local angle — that's what those subs reward | same day as HN |
 | **Product Hunt** | Tagline: "Your year in code, wrapped." Gallery image = the share card | Sunday 12:01am PT prep, launch Tue |
 | **dev.to / your blog** | Write-up: "I built Wrapped for git in 700 lines, zero deps" — teardown posts convert readers into stargazers | 2 days after HN |
 | **LinkedIn** | The org/team angle ("your team's year, in one card") — seeds the paying audience | a week later |
 
 **HN title that works** (concrete + free of hype):
-> Show HN: Git-Wrapped – Spotify Wrapped for your git history (zero dependencies, fully local)
+> Show HN: git-recap – Spotify Wrapped for your git history (zero dependencies, fully local)
 
 First comment you post yourself: what it does, why local matters, the tech (one `git log --numstat` pass, SVG generation, no deps), and what you'd build next.
 
