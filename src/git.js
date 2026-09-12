@@ -1,4 +1,6 @@
 import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
 import { langOf } from './langs.js';
 
 const SEP = '\x01'; // record separator at each commit
@@ -39,6 +41,57 @@ export function readLog(repo, { author } = {}) {
   if (author) args.push(`--author=${author}`);
   const out = runGit(repo, args);
   return out;
+}
+
+// Who you are, for profile mode. Read from git's own config rather than asked
+// for: the answer is already on the machine, and it is the same identity the
+// commits were signed with.
+export function gitIdentity(dir) {
+  const get = (key) => {
+    const r = spawnSync('git', ['-C', dir, 'config', '--get', key], { encoding: 'utf8' });
+    return (r.stdout || '').trim();
+  };
+  return { name: get('user.name'), email: get('user.email') };
+}
+
+// Every git repo under `root`, at most `depth` levels down.
+//
+// Stops descending as soon as a directory turns out to be a repo: a submodule or
+// a vendored checkout inside your project is that project's business, not a
+// separate project of yours. Skips the directories that would otherwise turn a
+// scan of a home directory into a scan of every dependency ever installed.
+const SKIP_DIRS = new Set([
+  'node_modules', 'vendor', 'dist', 'build', 'target', 'venv', '.venv',
+  '__pycache__', 'Library', 'snap', 'go', 'AppData',
+]);
+
+// A `.git` ENTRY is not a repository. This home directory had an empty `.git`
+// directory sitting in it — git reports "not a git repository" for it — and
+// testing for the name alone made the scanner swallow the whole home directory
+// as a single repo and stop. Check for the HEAD file inside, or for `.git` being
+// a file, which is how worktrees and submodules point elsewhere.
+export function isRepo(dir) {
+  const dotgit = path.join(dir, '.git');
+  try {
+    const st = fs.statSync(dotgit);
+    return st.isFile() || fs.existsSync(path.join(dotgit, 'HEAD'));
+  } catch { return false; }
+}
+
+export function findRepos(root, depth = 3) {
+  const found = [];
+  const walk = (dir, level) => {
+    let entries;
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+    if (isRepo(dir)) { found.push(dir); return; }
+    if (level >= depth) return;
+    for (const e of entries) {
+      if (!e.isDirectory() || e.name.startsWith('.') || SKIP_DIRS.has(e.name)) continue;
+      walk(path.join(dir, e.name), level + 1);
+    }
+  };
+  walk(root, 0);
+  return found;
 }
 
 export function parseLog(out, { since, until } = {}) {

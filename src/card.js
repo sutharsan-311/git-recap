@@ -18,11 +18,17 @@ const esc = (s) =>
 
 const fmt = (n) => Number(n || 0).toLocaleString('en-US');
 
-const FONT = `system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',sans-serif`;
+// Monospace, because the audience is developers and this is the face they look
+// at all day. No webfont: an SVG in a README cannot fetch one (and must not try),
+// so this is a stack of faces that ship with the machine. ui-monospace resolves
+// to SF Mono on macOS and Cascadia/Consolas on Windows; the named ones are picked
+// up when the viewer happens to have them installed.
+const FONT = `ui-monospace,'SF Mono','JetBrains Mono','Fira Code','Cascadia Mono',Menlo,Consolas,monospace`;
 
-// One palette per verdict key, plus a fallback for anything unrecognised.
-// bg carries the mood, ink is what stays readable on it, accent is reserved for
-// the one giant number. Contrast was checked against the ink on every bg.
+// One palette per verdict, all our own. bg carries the mood, ink is what stays
+// readable on it, accent is reserved for the one giant number. Nine verdicts,
+// nine colours, so two people's cards never read as the same template — and
+// none of them is lifted from anyone's editor theme.
 const PALETTES = {
   night:   { bg: '#171A6B', ink: '#F3F0E6', accent: '#FFD166' },
   early:   { bg: '#FF7A45', ink: '#2A1204', accent: '#FFFFFF' },
@@ -93,9 +99,27 @@ const checkerStrip = (x, y, w, h, fill) => `
     </g>
   </g>`;
 
+// How many weeks the grid should cover. A fixed 52 was wrong on any repo younger
+// than a year: a three-week project rendered as a sea of empty squares with two
+// dots in it, which reads as a broken widget rather than a short history. Found
+// by running this over real repos rather than the demo one, which is two years
+// long and hid it. Floor of 10 weeks so a brand-new repo still gets a shape.
+function heatCols(s) {
+  if (!s.firstCommit || !s.lastCommit) return 0;
+  const days = (new Date(s.lastCommit.date.slice(0, 10)) - new Date(s.firstCommit.date.slice(0, 10))) / 864e5;
+  return Math.max(10, Math.min(52, Math.ceil((days + 1) / 7)));
+}
+
 // Your year as a block of squares. Every product in this genre leads with this
 // shape because it is the one graphic that says "commits" without a label.
-function heatBlock(s, x, y, { cols, cell, gap, ink, accent }) {
+// The block keeps roughly the same footprint whatever the column count, by
+// growing the cells as the weeks shrink.
+function heatBlock(s, x, y, { targetW, gap, ink, accent, alignRight = false, maxCell = 16 }) {
+  const cols = heatCols(s);
+  if (!cols) return '';
+  const cell = Math.max(4, Math.min(maxCell, Math.floor((targetW - cols * gap) / cols)));
+  const width = cols * (cell + gap) - gap;
+  if (alignRight) x = x + targetW - width;
   const cells = heatCells(s, cols);
   if (!cells.length) return '';
   const max = Math.max(...cells, 1);
@@ -119,9 +143,9 @@ function heatBlock(s, x, y, { cols, cell, gap, ink, accent }) {
 const hugeNumber = (x, y, value, { size, ink, accent, anchor = 'start' }) => `
   <g>
     <text class="nudge" x="${x + 7}" y="${y + 7}" font-family="${FONT}" font-size="${size}" font-weight="800"
-      letter-spacing="-${(size * 0.045).toFixed(1)}" fill="${ink}" opacity=".25"${anchor === 'start' ? '' : ` text-anchor="${anchor}"`}>${esc(value)}</text>
+      letter-spacing="${(size * 0.01).toFixed(1)}" fill="${ink}" opacity=".25"${anchor === 'start' ? '' : ` text-anchor="${anchor}"`}>${esc(value)}</text>
     <text x="${x}" y="${y}" font-family="${FONT}" font-size="${size}" font-weight="800"
-      letter-spacing="-${(size * 0.045).toFixed(1)}" fill="${accent}"${anchor === 'start' ? '' : ` text-anchor="${anchor}"`}>${esc(value)}</text>
+      letter-spacing="${(size * 0.01).toFixed(1)}" fill="${accent}"${anchor === 'start' ? '' : ` text-anchor="${anchor}"`}>${esc(value)}</text>
   </g>`;
 
 // Rare / Epic / Legendary, the way Reddit Recap tiers its persona cards. Ours is
@@ -160,8 +184,10 @@ export function buildCardSvg(s, theme, { repo, range, portrait = false } = {}) {
   const W = portrait ? 1080 : 1200;
   const H = portrait ? 1350 : 630;
 
-  const titleLines = wrapText(v.title || 'Your year in code', portrait ? 15 : 13);
-  const blurbLines = wrapText(v.blurb || '', portrait ? 46 : 44).slice(0, 3);
+  // mono runs ~0.6em per character, so these wrap points are narrower than a
+  // proportional face would need at the same box width.
+  const titleLines = wrapText(v.title || 'Your year in code', portrait ? 16 : 17);
+  const blurbLines = wrapText(v.blurb || '', portrait ? 44 : 42).slice(0, 3);
   const facts = [repo, range, s.longestStreak && `${s.longestStreak}-day streak`]
     .filter(Boolean).join('  ·  ');
 
@@ -178,7 +204,7 @@ export function buildCardSvg(s, theme, { repo, range, portrait = false } = {}) {
   const foot = `</svg>\n`;
 
   if (portrait) {
-    const titleSize = titleLines.length > 2 ? 78 : 92;
+    const titleSize = titleLines.length > 2 ? 58 : 68;
     // Everything below the blurb is anchored off the title's real height rather
     // than a fixed y, or a three-line verdict name shoves the number off the card.
     const blurbTop = 335 + titleLines.length * (titleSize * 0.94) + 40;
@@ -190,7 +216,7 @@ export function buildCardSvg(s, theme, { repo, range, portrait = false } = {}) {
   ${tierBadge(W - 72, 82, tierOf(v), { ink: p.ink, bg: p.bg })}
 
   ${text(72, 205, v.emoji || '', { size: 118, fill: p.ink })}
-  ${titleLines.map((l, i) => text(72, 335 + i * (titleSize * 0.94), l, { size: titleSize, weight: 800, fill: p.ink, spacing: -2.5 })).join('')}
+  ${titleLines.map((l, i) => text(72, 335 + i * (titleSize * 0.94), l, { size: titleSize, weight: 800, fill: p.ink, spacing: 0 })).join('')}
   ${blurbLines.map((l, i) => text(72, blurbTop + i * 36, l, { size: 26, weight: 500, fill: p.ink, opacity: .78 })).join('')}
 
   ${hugeNumber(72, 880, fmt(s.total), { size: 210, ink: p.ink, accent: p.accent })}
@@ -198,15 +224,15 @@ export function buildCardSvg(s, theme, { repo, range, portrait = false } = {}) {
   ${text(W - 72, 880, fmt(s.activeDays), { size: 78, weight: 800, fill: p.ink, anchor: 'end' })}
   ${text(W - 72, 922, 'ACTIVE DAYS', { size: 18, weight: 800, fill: p.ink, spacing: 4, anchor: 'end', opacity: .7 })}
 
-  ${heatBlock(s, 72, 982, { cols: 52, cell: 13, gap: 4, ink: p.ink, accent: p.accent })}
+  ${heatBlock(s, 72, 982, { targetW: 936, gap: 4, ink: p.ink, accent: p.accent, maxCell: 22 })}
   ${langShare ? text(72, 1148, langShare, { size: 23, weight: 600, fill: p.ink, opacity: .75 }) : ''}
 
   ${text(72, 1245, facts, { size: 23, weight: 700, fill: p.ink, opacity: .85 })}
-  ${text(72, 1295, 'make yours → npx git-recap', { size: 23, weight: 800, fill: p.accent })}
+  ${text(72, 1295, '$ npx git-recap', { size: 23, weight: 800, fill: p.accent })}
 ` + foot;
   }
 
-  const titleSize = titleLines.length > 2 ? 58 : 68;
+  const titleSize = titleLines.length > 2 ? 44 : 52;
   return head + `
   ${checkerStrip(-40, 0, W + 80, 20, p.ink)}
   <rect x="${W - 430}" y="0" width="430" height="${H}" fill="url(#dots)" opacity=".55"/>
@@ -215,15 +241,15 @@ export function buildCardSvg(s, theme, { repo, range, portrait = false } = {}) {
   ${tierBadge(W - 64, 58, tierOf(v), { ink: p.ink, bg: p.bg })}
 
   ${text(64, 196, v.emoji || '', { size: 76, fill: p.ink })}
-  ${titleLines.map((l, i) => text(64, 288 + i * (titleSize * 0.95), l, { size: titleSize, weight: 800, fill: p.ink, spacing: -1.8 })).join('')}
+  ${titleLines.map((l, i) => text(64, 288 + i * (titleSize * 0.95), l, { size: titleSize, weight: 800, fill: p.ink, spacing: 0 })).join('')}
   ${blurbLines.map((l, i) => text(64, 316 + titleLines.length * (titleSize * 0.95) + i * 26, l, { size: 18, weight: 500, fill: p.ink, opacity: .78 })).join('')}
 
   ${text(64, 556, facts, { size: 16, weight: 700, fill: p.ink, opacity: .85 })}
-  ${text(64, 590, 'make yours → npx git-recap', { size: 16, weight: 800, fill: p.accent })}
+  ${text(64, 590, '$ npx git-recap', { size: 16, weight: 800, fill: p.accent })}
 
   ${hugeNumber(W - 64, 268, fmt(s.total), { size: 150, ink: p.ink, accent: p.accent, anchor: 'end' })}
   ${text(W - 64, 306, 'COMMITS', { size: 15, weight: 800, fill: p.ink, spacing: 5, anchor: 'end', opacity: .7 })}
-  ${heatBlock(s, W - 64 - (52 * 7 - 2), 360, { cols: 52, cell: 5, gap: 2, ink: p.ink, accent: p.accent })}
+  ${heatBlock(s, W - 64 - 364, 360, { targetW: 364, gap: 2, ink: p.ink, accent: p.accent, alignRight: true, maxCell: 9 })}
   ${text(W - 64, 470, `${fmt(s.activeDays)} active days`, { size: 17, weight: 700, fill: p.ink, anchor: 'end', opacity: .8 })}
   ${langShare ? text(W - 64, 496, langShare, { size: 15, weight: 600, fill: p.ink, anchor: 'end', opacity: .7 }) : ''}
 ` + foot;

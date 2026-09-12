@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
-import { readLog, parseLog, analyze } from './git.js';
+import { readLog, parseLog, analyze, findRepos, gitIdentity, isRepo } from './git.js';
 import { pickVerdict } from './verdict.js';
 import { THEMES } from './themes.js';
 import { buildHtml } from './report.js';
@@ -149,8 +149,12 @@ export function main(argv) {
     process.exit(1);
   }
   const repo = path.resolve(opts.repo);
-  if (!fs.existsSync(path.join(repo, '.git'))) {
-    console.error(`\n  ✖ ${repo} is not a git repository.\n\n  cd into a repo and run ${BOLD('npx git-recap')}\n`);
+  // Point it at a repo and you wrap that repo. Point it at a folder of repos and
+  // you wrap YOURSELF: every repo under it, your commits only, pooled into one
+  // recap. No flag to learn — the path already says which you meant.
+  const profile = !isRepo(repo);
+  if (profile && !findRepos(repo).length) {
+    console.error(`\n  ✖ ${repo} is not a git repository, and has no git repositories inside it.\n\n  cd into a repo and run ${BOLD('npx git-recap')}, or point it at a folder of repos.\n`);
     process.exit(1);
   }
   if (opts.year) {
@@ -158,19 +162,52 @@ export function main(argv) {
     opts.until = opts.until || `${opts.year}-12-31T23:59:59`;
   }
 
-  const filters = { since: opts.since, until: opts.until, author: opts.author };
+  const identity = gitIdentity(repo);
+  // In profile mode the author filter is not optional. A folder of repos contains
+  // other people's work, and crediting yourself with your colleagues' commits
+  // would make every number on the card a lie.
+  const me = opts.author || identity.email || identity.name;
+  const filters = { since: opts.since, until: opts.until, author: profile ? me : opts.author };
 
-  console.error(DIM('  ● reading git history…'));
-  let commits;
-  try {
-    commits = parseLog(readLog(repo, filters), filters);
-  } catch (e) {
-    if (/does not have any commits|unknown revision|bad revision/i.test(e.message)) {
-      console.error('  ✖ no commits found for this range — nothing to wrap.');
-    } else {
-      console.error(`  ✖ ${e.message}`);
-    }
+  if (profile && !me) {
+    console.error(`\n  ✖ profile mode needs to know who you are, and git has no user.email set.\n\n  Set one, or pass ${BOLD('--author "you@example.com"')}.\n`);
     process.exit(1);
+  }
+
+  let commits = [];
+  let counted = [];
+  if (profile) {
+    const repos = findRepos(repo);
+    console.error(DIM(`  ● scanning ${repos.length} repositories for commits by ${me}…`));
+    // A commit hash is the same in every clone of a repo, so this is what keeps a
+    // second checkout from counting your work twice. Found on a real home
+    // directory: nav2_config sat next to nav2tune and system-focus next to
+    // mypage/system-focus, and the pooled total was inflated by both of them.
+    const seen = new Set();
+    for (const r of repos) {
+      let cs = [];
+      try { cs = parseLog(readLog(r, filters), filters); } catch { continue; }
+      cs = cs.filter((c) => !seen.has(c.hash) && seen.add(c.hash));
+      if (!cs.length) continue;
+      // Prefix every path with its repo, or "src/index.js" from four projects
+      // merges into one impossible file on the ride-or-die slide.
+      const name = path.basename(r);
+      for (const c of cs) for (const f of c.files) f.path = `${name}/${f.path}`;
+      counted.push({ name, n: cs.length });
+      commits = commits.concat(cs);
+    }
+  } else {
+    console.error(DIM('  ● reading git history…'));
+    try {
+      commits = parseLog(readLog(repo, filters), filters);
+    } catch (e) {
+      if (/does not have any commits|unknown revision|bad revision/i.test(e.message)) {
+        console.error('  ✖ no commits found for this range — nothing to wrap.');
+      } else {
+        console.error(`  ✖ ${e.message}`);
+      }
+      process.exit(1);
+    }
   }
   if (!commits.length) {
     console.error('  ✖ no commits found for this range — nothing to wrap.');
@@ -180,7 +217,10 @@ export function main(argv) {
 
   const s = analyze(commits);
   s.verdict = pickVerdict(s);
-  s.repo = path.basename(repo);
+  s.repo = profile
+    ? `${identity.name || path.basename(repo)} · ${counted.length} repos`
+    : path.basename(repo);
+  if (profile) s.repos = counted.sort((a, b) => b.n - a.n);
 
   const range = rangeYears(s);
 
@@ -189,7 +229,10 @@ export function main(argv) {
     return;
   }
 
-  const outDir = path.resolve(opts.out || path.join(repo, 'git-recap'));
+  // Profile mode writes to a differently named folder on purpose: the default for
+  // repo mode is <repo>/git-recap, and scanning a home directory that already
+  // contains a project called git-recap would drop the output straight into it.
+  const outDir = path.resolve(opts.out || path.join(repo, profile ? 'git-recap-profile' : 'git-recap'));
   fs.mkdirSync(outDir, { recursive: true });
 
   const htmlPath = path.join(outDir, 'recap.html');
@@ -208,6 +251,11 @@ export function main(argv) {
 
   printBanner();
   printSummary(s);
+  if (profile) {
+    const top = s.repos.slice(0, 6).map((r) => `${r.name} (${r.n})`).join(', ');
+    console.log(`  ${DIM('counted   →')} ${top}${s.repos.length > 6 ? DIM(` +${s.repos.length - 6} more`) : ''}`);
+    console.log('');
+  }
   console.log(`  ${DIM('story     →')} ${BOLD(htmlPath)}`);
   console.log(`  ${DIM('share card→')} ${BOLD(svgPath)}  ${DIM('(drop it in your README)')}`);
   console.log(`  ${DIM('story card→')} ${BOLD(storyPath)}  ${DIM('(portrait, for posting)')}`);
