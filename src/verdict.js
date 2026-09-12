@@ -76,7 +76,11 @@ export function pickVerdict(s) {
     `${s.longestStreak} consecutive days of commits. Momentum isn't a habit for you — it's a personality.`, span);
 
   cands.sort((a, b) => b.score - a.score);
-  if (cands[0]) return { ...cands[0], score: undefined };
+  // score survives now: the card prints it as a tier (Rare / Epic / Legendary,
+  // the way Reddit Recap tiers its persona cards) alongside the raw multiplier,
+  // so the badge is checkable rather than decorative. Fallback verdicts have no
+  // score and get no badge, which is correct — they did not stand out.
+  if (cands[0]) return cands[0];
 
   // Nothing stood out. Fall back to the shape of the repo itself — most repos are
   // solo, so "solo" is a description, never an achievement worth ranking.

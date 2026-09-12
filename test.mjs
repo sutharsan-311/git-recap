@@ -112,7 +112,18 @@ for (const [key, signal] of Object.entries(only)) {
   const v = pickVerdict(ordinary({ ...flat, ...signal }));
   assert.equal(v.key, key, `expected ${key}, got ${v.key}`);
   assert.ok(v.title && v.emoji && v.blurb, `${key} is missing render fields`);
-  assert.equal(v.score, undefined, `${key} leaked its raw score into the output`);
+  // score used to be stripped here. The card prints it as a tier badge now
+  // (Rare / Epic / Legendary) next to the raw multiplier, so it has to survive —
+  // and it has to be a real number, or the badge would read "NaN× typical".
+  assert.ok(Number.isFinite(v.score) && v.score > 1, `${key} must carry a usable score, got ${v.score}`);
+}
+
+// A fallback verdict has nothing to brag about, so it must not carry a score —
+// that absence is what suppresses the tier badge on the card.
+for (const flatStats of [ordinary({ ...flat }), ordinary({ ...flat, total: 10 })]) {
+  const v = pickVerdict(flatStats);
+  assert.ok(['solo', 'force'].includes(v.key), `expected a fallback, got ${v.key}`);
+  assert.equal(v.score, undefined, 'a fallback verdict must not carry a score');
 }
 
 // ---------------------------------------------------------------- heatmap window

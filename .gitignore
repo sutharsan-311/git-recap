@@ -2,6 +2,9 @@
 node_modules/
 demo-repo/
 */git-recap/
+# ...and the same thing when the CLI is run from the repo root with no --out,
+# which the nested pattern above does not match.
+/git-recap/
 *.log
 .DS_Store
 

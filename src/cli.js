@@ -32,7 +32,8 @@ const HELP = `
 
   OUTPUT (written to ./git-recap/)
     recap.html   the animated story (open it, arrow keys to navigate)
-    recap.svg    share card for your README / social preview
+    recap.svg       share card for your README / social preview
+    recap-story.svg portrait card, sized for a phone feed
     recap.json   the raw stats, for the data nerds
 `;
 
@@ -193,16 +194,23 @@ export function main(argv) {
 
   const htmlPath = path.join(outDir, 'recap.html');
   const svgPath = path.join(outDir, 'recap.svg');
+  // Portrait as well as landscape. 1200x630 is the shape a README and a social
+  // preview want; every other product in this genre (Spotify, Duolingo, Discord)
+  // ships portrait, because that is the shape a phone feed wants. Same card,
+  // two crops, so you don't have to choose which place to share it.
+  const storyPath = path.join(outDir, 'recap-story.svg');
   const jsonPath = path.join(outDir, 'recap.json');
 
   fs.writeFileSync(htmlPath, buildHtml(s, theme, { repo: s.repo, year: opts.year, theme: theme.id, generatedAt: new Date().toISOString(), version: VERSION }));
   fs.writeFileSync(svgPath, buildCardSvg(s, theme, { repo: s.repo, range }));
+  fs.writeFileSync(storyPath, buildCardSvg(s, theme, { repo: s.repo, range, portrait: true }));
   fs.writeFileSync(jsonPath, JSON.stringify(s, null, 2));
 
   printBanner();
   printSummary(s);
   console.log(`  ${DIM('story     →')} ${BOLD(htmlPath)}`);
   console.log(`  ${DIM('share card→')} ${BOLD(svgPath)}  ${DIM('(drop it in your README)')}`);
+  console.log(`  ${DIM('story card→')} ${BOLD(storyPath)}  ${DIM('(portrait, for posting)')}`);
   console.log(`  ${DIM('raw stats →')} ${BOLD(jsonPath)}`);
   console.log('');
   console.log(`  ${DIM('tip: scroll through the story · "Save share card" exports a PNG')}`);

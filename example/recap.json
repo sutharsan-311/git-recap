@@ -653,6 +653,7 @@
   "avgPerDay": 2.199546485260771,
   "verdict": {
     "key": "night",
+    "score": 2.8178694158075603,
     "title": "The Midnight Architect",
     "emoji": "🦉",
     "blurb": "42% of your commits shipped after 10pm. The best ideas don't sleep — and apparently, neither do you."

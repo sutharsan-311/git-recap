@@ -26,7 +26,7 @@ No account. No API key. No upload. Zero dependencies.
 | **Who did the work** | **The verdict** 👏 |
 | ![crew](docs/screenshots/story-crew.png) | ![verdict](docs/screenshots/story-verdict.png) |
 
-**And the share card** — generated as `recap.svg`, made to be embedded in your README:
+**And the share card** — generated as `recap.svg`, made to be embedded in your README. The colour is your verdict, so no two people get the same card:
 
 ![share card](example/recap.svg)
 
@@ -52,7 +52,8 @@ That's it. It writes to `./git-recap/`:
 | File | What it is |
 | --- | --- |
 | `recap.html` | The animated story. Opens in your browser and scrolls like a page. |
-| `recap.svg` | Share card for your README / social preview. |
+| `recap.svg` | Share card for your README / social preview. Landscape, 1200×630. |
+| `recap-story.svg` | The same card in portrait, sized for a phone feed. |
 | `recap.json` | The raw stats — do whatever you want with them. |
 
 ## Options
@@ -117,7 +118,7 @@ Everything from one `git log --numstat` pass over your history:
 
 ## Privacy
 
-Everything runs on your machine with the `git` binary you already have. There is no server, no telemetry, no network call. It reads, it computes, it writes three files. Read the whole source — it's ~1,400 lines with zero dependencies.
+Everything runs on your machine with the `git` binary you already have. There is no server, no telemetry, no network call. It reads, it computes, it writes four files. Read the whole source — it's ~1,600 lines with zero dependencies.
 
 ## Contributing
 
