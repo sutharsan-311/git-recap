@@ -382,12 +382,17 @@ function buildSlides(s, t, meta) {
 function css(t) {
   return `
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; }
+  html, body { min-height: 100%; }
+  /* The deck scrolls. proximity, not mandatory: mandatory snap on a trackpad
+     fights the hand holding it, and half this audience reads on a laptop. */
+  html { scroll-snap-type: y proximity; scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; scroll-snap-type: none; }
+  }
   body {
     font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
     background: radial-gradient(1100px 700px at 15% -10%, ${t.bg2}, ${t.bg} 60%) fixed, ${t.bg};
     color: ${t.text};
-    overflow: hidden;
     -webkit-font-smoothing: antialiased;
   }
   .mono { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; }
@@ -416,15 +421,15 @@ function css(t) {
   .navbtn { width: 42px; height: 42px; border-radius: 50%; border: 1px solid ${t.border}; background: ${t.card}; color: ${t.text}; font-size: 17px; cursor: pointer; transition: transform .15s ease; }
   .navbtn:hover { transform: scale(1.08); }
   /* slides */
-  .stage { position: fixed; inset: 0; }
   .slide {
-    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    opacity: 0; transform: translateY(30px) scale(.985); pointer-events: none;
-    transition: opacity .55s ease, transform .55s cubic-bezier(.2,.7,.2,1);
+    min-height: 100svh; display: flex; align-items: center; justify-content: center;
+    scroll-snap-align: center;
   }
-  .slide.active { opacity: 1; transform: none; pointer-events: auto; }
-  .inner { width: min(920px, 92vw); max-height: 82vh; overflow: hidden auto; text-align: center; padding: 70px 0 40px; scrollbar-width: none; }
-  .inner::-webkit-scrollbar { display: none; }
+  /* .inner deliberately does NOT scroll. It used to (max-height: 82vh), and a
+     nested scroller inside a snapping page eats the wheel: the page won't move on
+     until the inner box bottoms out. A slide taller than the window just makes its
+     section taller and the page keeps scrolling through it. */
+  .inner { width: min(920px, 92vw); text-align: center; padding: 96px 0 88px; }
   .kicker { font-size: 12.5px; font-weight: 700; letter-spacing: .32em; color: ${t.faint}; margin-bottom: 26px; }
   h1 { font-size: clamp(46px, 9vw, 104px); line-height: 1.02; letter-spacing: -0.03em; font-weight: 800; word-break: break-word; }
   h2 { font-size: clamp(32px, 5.4vw, 58px); line-height: 1.08; letter-spacing: -0.02em; font-weight: 800; margin-bottom: 30px; }
@@ -498,32 +503,51 @@ function pageJs(t, cardSvg, seed) {
       dotsBox.appendChild(d);
     });
     const dots = [...dotsBox.children];
+    // Fired once per slide per page load. Scrolling back up past the verdict and
+    // getting confetti every time reads as a cheap trick, and re-running the
+    // count-ups resets numbers the reader is still looking at. Replay reloads.
+    const seen = new Set();
     function paint() {
       slides.forEach((s, i) => s.classList.toggle('active', i === idx));
       dots.forEach((d, i) => d.classList.toggle('on', i === idx));
       counter.textContent = (idx + 1) + ' / ' + slides.length;
       progress.style.width = ((idx + 1) / slides.length * 100) + '%';
+      if (seen.has(idx)) return;
+      seen.add(idx);
       runCounters(slides[idx]);
       if (slides[idx].dataset.title === 'Verdict') confetti();
     }
-    function go(i) { idx = Math.max(0, Math.min(slides.length - 1, i)); paint(); }
+    // paint() before the scroll, not after it: make-screenshots.mjs and
+    // make-demo-gif.mjs walk the deck with synthetic ArrowRight keydowns and then
+    // pump a hand-rolled clock, so the confetti has to start inside this call
+    // stack. An IntersectionObserver callback lands a task too late for them.
+    function go(i) {
+      idx = Math.max(0, Math.min(slides.length - 1, i));
+      paint();
+      slides[idx].scrollIntoView({ block: 'center' });
+    }
     const next = () => go(idx + 1), prev = () => go(idx - 1);
     document.querySelector('#nxt').onclick = next;
     document.querySelector('#prv').onclick = prev;
     addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); next(); }
-      if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prev(); }
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); next(); }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); prev(); }
       if (e.key === 'Home') go(0);
       if (e.key === 'End') go(slides.length - 1);
     });
-    let touchX = null;
-    addEventListener('touchstart', (e) => touchX = e.touches[0].clientX, { passive: true });
-    addEventListener('touchend', (e) => {
-      if (touchX === null) return;
-      const dx = e.changedTouches[0].clientX - touchX;
-      if (Math.abs(dx) > 60) (dx < 0 ? next() : prev());
-      touchX = null;
-    }, { passive: true });
+    // No touch handler. A horizontal swipe fought Safari's back gesture; the
+    // native vertical scroll is the gesture nobody has to be taught.
+    // Which slide is on screen is now the scroll position's business.
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        const i = slides.indexOf(e.target);
+        if (i !== -1 && i !== idx) { idx = i; paint(); }
+      }
+    // A centre band rather than a ratio: a slide taller than the window never
+    // reaches 50% visible, and would never activate.
+    }, { rootMargin: '-45% 0px -45% 0px' });
+    slides.forEach((s) => io.observe(s));
 
     function runCounters(slide) {
       slide.querySelectorAll('[data-cu]').forEach((el) => {

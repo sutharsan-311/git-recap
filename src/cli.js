@@ -205,7 +205,7 @@ export function main(argv) {
   console.log(`  ${DIM('share card→')} ${BOLD(svgPath)}  ${DIM('(drop it in your README)')}`);
   console.log(`  ${DIM('raw stats →')} ${BOLD(jsonPath)}`);
   console.log('');
-  console.log(`  ${DIM('tip: arrows / swipe navigate the story · "Save share card" exports a PNG')}`);
+  console.log(`  ${DIM('tip: scroll through the story · "Save share card" exports a PNG')}`);
   console.log('');
 
   if (opts.open && process.stdout.isTTY) {

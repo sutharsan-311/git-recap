@@ -25,15 +25,36 @@ const BUDGET_MS = 3000;
 
 // Chrome fast-forwards rAF but not CSS animation, so pin the reveals to their end
 // state and hide inactive slides. Identical reasoning to make-screenshots.mjs.
-const FREEZE = `<style>
+const FREEZE = (i) => `<style>
 * { transition: none !important; }
-.slide { opacity: 0 !important; visibility: hidden !important; }
-.slide.active { opacity: 1 !important; transform: none !important; visibility: visible !important; }
+/* Two separate problems, one block.
+   WHICH slide is on camera is chosen here, in CSS, by position — not by reading the
+   deck's own .active class. The deck decides what's active from scroll position via
+   an IntersectionObserver now, and that observer fires a task after the synthetic
+   keydown walk below and overwrites where the walk landed: the verdict shot came out
+   as the end card. nth-of-type cannot be argued with. The walk still runs, because it
+   is what starts the confetti and the count-ups.
+   WHERE it is drawn is the second problem. Slides sit in normal flow now, one window
+   tall each, so the tenth is nine screens down — and headless Chrome screenshots the
+   top of the document, not wherever the page happens to be scrolled. Taking every
+   slide out of flow leaves nothing to scroll, so the top of the document IS the
+   viewport and the chosen slide is on camera by construction. */
+.slide {
+  position: fixed !important; inset: 0 !important; min-height: 0 !important;
+  opacity: 0 !important; visibility: hidden !important;
+}
+.slide:nth-of-type(${i + 1}) { opacity: 1 !important; visibility: visible !important; transform: none !important; }
 .rv { opacity: 1 !important; transform: none !important; animation: none !important; }
 </style>`;
 
 const drive = (steps) => `<script>
 (() => {
+  // The deck watches slides with an IntersectionObserver and sets the counter, the
+  // dots and the progress bar from whatever is on screen. Every slide is pinned to
+  // the viewport by FREEZE above, so all eleven "intersect" and the last one wins:
+  // the verdict still had 11/11 under it. Stubbed out, the walk below is the only
+  // thing that moves the deck's state, which is what the stills should show.
+  IntersectionObserver = function () { return { observe() {}, unobserve() {}, disconnect() {} }; };
   let t = 0;
   const queue = [];
   requestAnimationFrame = (cb) => queue.push(cb);
@@ -92,7 +113,7 @@ fs.mkdirSync(path.dirname(out), { recursive: true });
 try {
   for (let i = 0; i < count; i++) {
     const page = path.join(tmp, `p${i}.html`);
-    fs.writeFileSync(page, html.replace('</head>', `${FREEZE}${drive(i)}</head>`));
+    fs.writeFileSync(page, html.replace('</head>', `${FREEZE(i)}${drive(i)}</head>`));
     shoot(chrome, page, path.join(tmp, `f${String(i + 1).padStart(3, '0')}.png`));
     process.stderr.write(`\r  ● captured ${i + 1}/${count}`);
   }

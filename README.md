@@ -12,7 +12,7 @@ No account. No API key. No upload. Zero dependencies.
 [![license](https://img.shields.io/badge/license-MIT-ffc36e)](LICENSE)
 [![node](https://img.shields.io/badge/node-%E2%89%A516-4dd8ff)](package.json)
 
-**`npx git-recap`** · run it in any repo · arrows to navigate
+**`npx git-recap`** · run it in any repo · scroll through it
 
 </div>
 
@@ -51,7 +51,7 @@ That's it. It writes to `./git-recap/`:
 
 | File | What it is |
 | --- | --- |
-| `recap.html` | The animated story. Opens in your browser, `←` `→` / swipe to navigate. |
+| `recap.html` | The animated story. Opens in your browser and scrolls like a page. |
 | `recap.svg` | Share card for your README / social preview. |
 | `recap.json` | The raw stats — do whatever you want with them. |
 
